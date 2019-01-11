@@ -1,3 +1,4 @@
+import json
 import logging
 import os
 import yaml
@@ -16,12 +17,19 @@ class Pool(object):
         self.channels = channels
 
 
+    def containsRepo(self, repo):
+        if repo in self.repos:
+            return True
+        else:
+            return False
+
+
 def readFile(path):
     configFile = open(path, "r")
     return configFile.read()
 
 
-def loadConfiguration():
+def getConfiguration():
 
     # Read configuarion file
     # Looks first in os.getcwd, then ~/, then /tmp
@@ -46,10 +54,10 @@ def loadConfiguration():
     else:
         return {
             "statusCode": 500,
-            "body": {
+            "body": json.dumps({
                 "success": False,
                 "message": "Unable to find .ghi.yml file."
-            }
+            })
         }
 
     try:
@@ -60,10 +68,10 @@ def loadConfiguration():
         logging.error(e)
         return {
             "statusCode": 500,
-            "body": {
+            "body": json.dumps({
                 "success": False,
                 "message": "Error parsing yaml file:\n%s" % e
-            }
+            })
         }
 
     # Validate top level params
@@ -79,10 +87,10 @@ def loadConfiguration():
     except (KeyError, TypeError) as e:
         return {
             "statusCode": 500,
-            "body": {
+            "body": json.dumps({
                 "success": False,
                 "message": "Missing or invalid parameter in configuration file: %s" % e
-            }
+            })
         }
 
     # for each pool, validate and create a Pool object. append to array
@@ -133,10 +141,10 @@ def loadConfiguration():
         except (KeyError, TypeError) as e:
             return {
                 "statusCode": 500,
-                "body": {
+                "body": json.dumps({
                     "success": False,
                     "message": "Missing or invalid parameter in configuration file: %s" % e
-                }
+                })
             }
 
         pools.append(

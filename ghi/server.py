@@ -74,8 +74,11 @@ def application():
     ])
 
 if __name__ == "__main__":
-    port = GetPort()
-    app = application()
-    app.listen(port)
-    logging.info("server listening on %s" % port)
-    tornado.ioloop.IOLoop.current().start()
+    try:
+        port = GetPort()
+        app = application()
+        app.listen(port)
+        logging.info("server listening on %s" % port)
+        tornado.ioloop.IOLoop.current().start()
+    except (KeyboardInterrupt, SystemExit):
+        logging.info("server is shutting down")
