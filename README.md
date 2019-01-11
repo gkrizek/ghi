@@ -1,2 +1,3 @@
 # ghi
-GitHub IRC Notification Service
+
+**G**it**H**ub **I**RC Notification Service
