@@ -3,6 +3,7 @@ import sys
 sys.path.append(os.path.dirname(os.path.realpath(__file__)))
 import json
 from configuration import getConfiguration
+from github import parsePayload
 from validation import validatePayload
 
 def handler(event, context=None):
@@ -41,7 +42,34 @@ def handler(event, context=None):
                     "message": "payload validation failed"
                 })
             }
+  
+        githubEvent = "push"
+        githubPayload = "{}"
+        githubResult = parsePayload(githubEvent, githubPayload, configuration["pools"])
+        if githubResult["statusCode"] != 200:
+            return githubResult
 
+
+        print(githubPayload)
+        
+        return {
+            "statusCode": 200,
+            "body": "it worked"
+        }
+
+
+
+        """
+        githubResult = {
+            "statusCode": 200,
+            "pool": Pool Object,
+            "messages": [
+                "message1",
+                "message2"
+            ]
+        }
+        """
+        # Create an IRC send function that will send the messages to the correct IRC channels
         
 
     else:
