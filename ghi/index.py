@@ -8,8 +8,9 @@ from configuration import loadConfiguration
 def handler(event, context=None):
     # Ensure it"s a valid request
     if event and "body" in event and "headers" in event:
-        
-        #loadConfiguration()     
+
+        pools = loadConfiguration()
+
         return {
             "statusCode": 401,
             "body": "Received: %s" % event
