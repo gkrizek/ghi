@@ -4,7 +4,9 @@ sys.path.append(os.path.dirname(os.path.realpath(__file__)))
 import json
 from configuration import getConfiguration
 from github import getPool, parsePayload
+from irc import sendMessages
 from validation import validatePayload
+
 
 def handler(event, context=None):
     # ensure it"s a valid request
@@ -30,15 +32,15 @@ def handler(event, context=None):
             }
 
         # figure out which pool this should belong to so we can use its secret
-        pool = getPool(githubPayload, configuration['pools'])
-        if pool['statusCode'] != 200:
+        pool = getPool(githubPayload, configuration["pools"])
+        if pool["statusCode"] != 200:
             return pool
 
         # check signatures of request
         validPayload = validatePayload(
             payload=githubPayload,
             signature=githubSignature,
-            secret=pool['secret']
+            secret=pool["secret"]
         )
         if not validPayload:
             return {
@@ -53,33 +55,19 @@ def handler(event, context=None):
         if githubResult["statusCode"] != 200:
             return githubResult
 
+        # Send messages to the designated IRC channel(s)
+        sendToIrc = sendMessages(pool["pool"], githubResult["messages"])
+        if sendToIrc["statusCode"] != 200:
+            return sendToIrc
 
-        print(githubResult)
-        
         return {
             "statusCode": 200,
-            "body": "it worked"
-        }
+            "body": json.dumps({
+                "success": True,
+                "message": "Successfully notified IRC."
+            })
 
-
-
-        """
-        githubResult = {
-            "statusCode": 200,
-            "messages": [
-                "message1",
-                "message2"
-            ]
         }
-        pool = {
-            "statusCode": 200,
-            "pool": Pool Object,
-            "name": "gkrizek/pipeline",
-            "secret": "Abc123"
-        }
-        """
-        # Create an IRC send function that will send the messages to the correct IRC channels
-        
 
     else:
         return {

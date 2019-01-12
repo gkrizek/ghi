@@ -1,16 +1,29 @@
+import os
+import sys
+sys.path.append(os.path.dirname(os.path.realpath(__file__)) + '../')
+from irc import Colors
 
 
 def Push(payload):
-
+ 
     ref  = payload["ref"]
-
+    colors = Colors()
     if ref.startswith("refs/tags"):
         # Tag was pushed
-        message = "[{repo}] {user} pushed tag {tag}: {compareUrl}".format(
+        message = (
+            "{purple}[{repo}]{reset} {gray}{user}{reset} pushed tag "
+            "{green}{tag}{reset}: {blue}{underline}{compareUrl}{reset}"
+        ).format(
             repo       = payload["repository"]["name"],
             user       = payload["pusher"]["name"],
             tag        = ref.split("/", maxsplit=2)[2],
-            compareUrl = payload["compare"]
+            compareUrl = payload["compare"],
+            blue       = colors.dark_blue,
+            gray       = colors.light_gray,
+            purple     = colors.light_purple,
+            green      = colors.light_green,
+            underline  = colors.underline,
+            reset      = colors.reset
         )
 
         return {
@@ -30,12 +43,20 @@ def Push(payload):
 
         # Summary Message
         messages.append(
-            "[{repo}] {user} pushed {length} commits to {branch}: {compareUrl}".format(
+            "{purple}[{repo}]{reset} {gray}{user}{reset} pushed {bold}{length}{reset} "
+            "commit(s) to {green}{branch}{reset}: {blue}{underline}{compareUrl}{reset}".format(
                 repo       = repo,
                 user       = user,
                 length     = length,
                 branch     = branch,
-                compareUrl = compareUrl
+                compareUrl = compareUrl,
+                blue       = colors.dark_blue,
+                gray       = colors.light_gray,
+                purple     = colors.light_purple,
+                green      = colors.light_green,
+                underline  = colors.underline,
+                bold       = colors.bold,
+                reset      = colors.reset
 
             )
         )
@@ -48,12 +69,17 @@ def Push(payload):
                 commitMessage = commitMessage[0:74] + "..."
 
             messages.append(
-                "{repo}/{branch} {shortCommit} {user}: {message}".format(
+                "{purple}{repo}{reset}/{green}{branch}{reset} {gray}{shortCommit}{reset} {blue}{user}{reset}: {message}".format(
                     repo        = repo,
                     branch      = branch,
                     shortCommit = commit["id"][0:7],
                     user        = user,
-                    message     = commitMessage
+                    message     = commitMessage,
+                    blue       = colors.dark_blue,
+                    gray       = colors.dark_gray,
+                    purple     = colors.light_purple,
+                    green      = colors.light_green,
+                    reset      = colors.reset
                 )
             )
 
