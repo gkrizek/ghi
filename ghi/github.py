@@ -3,13 +3,46 @@ from events.pull_request import PullRequest
 from events.push import Push
 
 
-def findPool(repo, pools):
+def getPool(event, payload, pools):
     ownerPool = None
+    if event == "push":
+        repo = payload["repository"]["full_name"]
+    elif event == "pull_request":
+        repo = payload["repo"]["full_name"]
+    else:
+        return {
+            "statusCode": 202,
+            "body": json.dumps({
+                "success": True,
+                "message": "Received event '%s'. Doing nothing." % event
+            })
+        }
+
     for pool in pools:
         if pool.containsRepo(repo):
             ownerPool = pool
             break
-    return ownerPool
+
+    if ownerPool is None:
+        return {
+            "statusCode": 202,
+            "body": json.dumps({
+                "success": True,
+                "message": "Received repository '%s', but no pool is configured for it." % repo
+            })
+        }
+    else:
+        # get the secret for this repo
+        for requestedRepo in ownerPool.repos:
+            if repo == requestedRepo['name']:
+                repoName = requestedRepo['name']
+                repoSecret = requestedRepo['secret']
+        return {
+            "statusCode": 200,
+            "pool": ownerPool.name,
+            "name": repoName,
+            "secret": repoSecret
+        }
 
 
 def parsePayload(event, payload, pools):
@@ -69,6 +102,6 @@ def parsePayload(event, payload, pools):
             "statusCode": 202,
             "body": json.dumps({
                 "success": True,
-                "message": "Received event '%s'. Doing nothing..." % event
+                "message": "Received event '%s'. Doing nothing." % event
             })
         }

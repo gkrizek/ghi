@@ -6,10 +6,9 @@ import yaml
 
 class Pool(object):
 
-    def __init__(self, name, repos, secret, host, port, nick, password, channels):
+    def __init__(self, name, repos, host, port, nick, password, channels):
         self.name = name
         self.repos = repos
-        self.secret = secret
         self.host = host
         self.port = port
         self.nick = nick
@@ -18,10 +17,10 @@ class Pool(object):
 
 
     def containsRepo(self, repo):
-        if repo in self.repos:
-            return True
-        else:
-            return False
+        for configRepo in self.repos:                
+            if repo == configRepo['name']:
+                return True
+        return False
 
 
 def readFile(path):
@@ -106,12 +105,29 @@ def getConfiguration():
             if type(repos) is not list:
                 raise TypeError("'repos' is not a list")
 
-            if "GHI_GITHUB_SECRET" in os.environ:
-                secret = os.environ["GHI_GITHUB_SECRET"]
-            else:
-                secret = pool['github']['secret']
-            if type(secret) is not str:
-                raise TypeError("'secret' is not a string")
+            generatedRepos = []
+            for repo in repos:
+                fullName = repo['name']
+                if type(fullName) is not str:
+                    raise TypeError("'name' is not a string")
+                
+                if fullName.count('/') == 0:
+                    raise TypeError("repo name must be the full name. Ex: owner/repo")
+
+                repoOwner = fullName.split('/', maxsplit=1)[0].upper()
+                repoName = fullName.split('/', maxsplit=1)[1].upper()
+
+                if "GHI_GITHUB_SECRET_{}_{}".format(repoOwner,repoName) in os.environ:
+                    secret = "GHI_GITHUB_SECRET_{}_{}".format(repoOwner,repoName)
+                else:
+                    secret = repo['secret']
+                if type(secret) is not str:
+                    raise TypeError("'secret' is not a string")
+
+                generatedRepos.append({
+                    "name": fullName,
+                    "secret": secret
+                })
 
             host = pool['irc']['host']
             if type(host) is not str:
@@ -150,8 +166,7 @@ def getConfiguration():
         pools.append(
             Pool(
                 name=name,
-                repos=repos,
-                secret=secret,
+                repos=generatedRepos,
                 host=host,
                 port=port,
                 nick=nick,

@@ -3,7 +3,7 @@ import sys
 sys.path.append(os.path.dirname(os.path.realpath(__file__)))
 import json
 from configuration import getConfiguration
-from github import parsePayload
+from github import getPool, parsePayload
 from validation import validatePayload
 
 def handler(event, context=None):
@@ -15,11 +15,11 @@ def handler(event, context=None):
         if configuration["statusCode"] != 200:
             return configuration
 
-        # verify the request is from GtitHub and is valid
+        # verify the request is from GtitHub
         githubPayload = event["body"]
         try:
             githubSignature = event["headers"]["X-Hub-Signature"]
-            githubEvent = event["header"]["X-GitHub-Event"]
+            githubEvent = event["headers"]["X-GitHub-Event"]
         except KeyError as e:
             return {
                 "statusCode": 400,
@@ -29,10 +29,16 @@ def handler(event, context=None):
                 })
             }
 
+        # figure out which pool this should belong to so we can use its secret
+        pool = getPool(githubEvent, githubPayload, configuration['pools'])
+        if pool['statusCode'] != 200:
+            return pool
+
+        # check signatures of request
         validPayload = validatePayload(
             payload=githubPayload,
             signature=githubSignature,
-            secret=githubEvent
+            secret=pool['secret']
         )
         if not validPayload:
             return {
@@ -43,9 +49,7 @@ def handler(event, context=None):
                 })
             }
   
-        githubEvent = "push"
-        githubPayload = "{}"
-        githubResult = parsePayload(githubEvent, githubPayload, configuration["pools"])
+        githubResult = parsePayload(githubEvent, githubPayload, pool)
         if githubResult["statusCode"] != 200:
             return githubResult
 
