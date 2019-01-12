@@ -45,13 +45,13 @@ def Push(payload):
             # If commit message is longer than 75 characters, truncate.
             commitMessage = commit["message"]
             if len(commitMessage) > 75:
-                commitMessage = commitMessage[0-74] + "..."
+                commitMessage = commitMessage[0:74] + "..."
 
             messages.append(
                 "{repo}/{branch} {shortCommit} {user}: {message}".format(
                     repo        = repo,
                     branch      = branch,
-                    shortCommit = commit["id"][0-6],
+                    shortCommit = commit["id"][0:7],
                     user        = user,
                     message     = commitMessage
                 )

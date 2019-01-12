@@ -30,7 +30,7 @@ def handler(event, context=None):
             }
 
         # figure out which pool this should belong to so we can use its secret
-        pool = getPool(githubEvent, githubPayload, configuration['pools'])
+        pool = getPool(githubPayload, configuration['pools'])
         if pool['statusCode'] != 200:
             return pool
 
@@ -49,12 +49,12 @@ def handler(event, context=None):
                 })
             }
   
-        githubResult = parsePayload(githubEvent, githubPayload, pool)
+        githubResult = parsePayload(githubEvent, githubPayload)
         if githubResult["statusCode"] != 200:
             return githubResult
 
 
-        print(githubPayload)
+        print(githubResult)
         
         return {
             "statusCode": 200,
@@ -66,11 +66,16 @@ def handler(event, context=None):
         """
         githubResult = {
             "statusCode": 200,
-            "pool": Pool Object,
             "messages": [
                 "message1",
                 "message2"
             ]
+        }
+        pool = {
+            "statusCode": 200,
+            "pool": Pool Object,
+            "name": "gkrizek/pipeline",
+            "secret": "Abc123"
         }
         """
         # Create an IRC send function that will send the messages to the correct IRC channels

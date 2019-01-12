@@ -3,20 +3,10 @@ from events.pull_request import PullRequest
 from events.push import Push
 
 
-def getPool(event, payload, pools):
+def getPool(payload, pools):
     ownerPool = None
-    if event == "push":
-        repo = payload["repository"]["full_name"]
-    elif event == "pull_request":
-        repo = payload["repo"]["full_name"]
-    else:
-        return {
-            "statusCode": 202,
-            "body": json.dumps({
-                "success": True,
-                "message": "Received event '%s'. Doing nothing." % event
-            })
-        }
+    payload = json.loads(payload)
+    repo = payload["repository"]["full_name"]
 
     for pool in pools:
         if pool.containsRepo(repo):
@@ -39,28 +29,17 @@ def getPool(event, payload, pools):
                 repoSecret = requestedRepo['secret']
         return {
             "statusCode": 200,
-            "pool": ownerPool.name,
+            "pool": ownerPool,
             "name": repoName,
             "secret": repoSecret
         }
 
 
-def parsePayload(event, payload, pools):
+def parsePayload(event, payload):
 
     # for every supported event find the pool, parse the payload, and return IRC messages
+    payload = json.loads(payload)
     if event == "push":
-        # Find what pool is watching for this repo
-        repo = payload["repository"]["full_name"]
-        pool = findPool(repo, pools)
-        if pool is None:
-            return {
-                "statusCode": 202,
-                "body": json.dumps({
-                    "success": True,
-                    "message": "Received repository '%s', but no pool is configured for it." % repo
-                })
-            }
-
         # Create messages based on the payload
         push = Push(payload)
         if push["statusCode"] != 200:
@@ -68,33 +47,19 @@ def parsePayload(event, payload, pools):
 
         return {
             "statusCode": 200,
-            "pool": pool,
-            "messsages": push["messages"]
+            "messages": push["messages"]
         }
 
 
     elif event == "pull_request":
-        # Find what pool is watching for this repo
-        repo = payload["repo"]["full_name"]
-        pool = findPool(repo, pools)
-        if pool is None:
-            return {
-                "statusCode": 202,
-                "body": json.dumps({
-                    "success": True,
-                    "message": "Received repository '%s', but no pool is configured for it." % repo
-                })
-            }
-
         # Create messages based on the payload
-        push = Push(payload)
-        if push["statusCode"] != 200:
-            return push
+        pullRequest = PullRequest(payload)
+        if pullRequest["statusCode"] != 200:
+            return pullRequest
 
         return {
             "statusCode": 200,
-            "pool": pool,
-            "messsages": push["messages"]
+            "messages": pullRequest["messages"]
         }
 
     else:
