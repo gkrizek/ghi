@@ -1,4 +1,6 @@
-
+import json
+import socket
+from time import sleep
 
 class Colors(object):
 
@@ -26,6 +28,71 @@ class Colors(object):
         self.light_gray   = "\\00315"
 
 
-def sendMessages(pool, messages):
+class IRC(object):
 
-    return
+
+    def __init__(self):  
+        self.irc = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.irc.settimeout(10)
+
+
+    def send(self, channel, message):
+        self.irc.send(bytes("PRIVMSG {} :{}\n".format(channel, message), "UTF-8"))
+ 
+
+    def connect(self, host, port, channels, nick, password):
+        self.irc.connect((host, port))                                                         
+        self.irc.send(bytes("USER {nick} {nick} {nick} {nick}\n".format(nick=nick), "UTF-8"))
+        self.irc.send(bytes("NICK {}\n".format(nick), "UTF-8"))
+        if password != None:
+            self.irc.send(bytes("PRIVMSG NICKSERV :IDENTIFY {}\n".format(password), "UTF-8"))
+        for channel in channels:               
+            self.irc.send(bytes("JOIN {}\n".format(channel), "UTF-8"))
+ 
+
+    def disconnect(self, channels):
+        for channel in channels:               
+            self.irc.send(bytes("PART {}\n".format(channel), "UTF-8"))
+        self.irc.send(bytes("QUIT\n", "UTF-8"))
+
+
+    def get_text(self):
+        text=self.irc.recv(2040)
+        return text.decode('utf-8')
+        
+
+def sendMessages(pool, messages):
+    try:
+        irc = IRC()
+        irc.connect(pool.host, pool.port, pool.channels, pool.nick, pool.password)
+
+        # Wait until connection is established
+        while True:    
+            text = irc.get_text()
+            if "End of /NAMES list." in text:
+                break
+            sleep(0.25)
+
+        for channel in pool.channels:
+            for message in messages:
+                irc.send(channel, message)
+
+        irc.disconnect(pool.channels)
+
+
+    except Exception as e:
+        return {
+            "statusCode": 500,
+            "body": json.dumps({
+                "success": False,
+                "message": "There was a problem sending messages to IRC:\n%s" % e
+            })
+        }
+
+    return {
+        "statusCode": 200,
+        "body": json.dumps({
+            "success": True,
+            "message": "Messages sent successfully."
+        }) 
+    }
