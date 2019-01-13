@@ -35,13 +35,13 @@ def getPool(payload, pools):
         }
 
 
-def parsePayload(event, payload):
+def parsePayload(event, payload, repos):
 
-    # for every supported event find the pool, parse the payload, and return IRC messages
+    # for every supported event: find the pool, parse the payload, and return IRC messages
     payload = json.loads(payload)
     if event == "push":
         # Create messages based on the payload
-        push = Push(payload)
+        push = Push(payload, repos)
         if push["statusCode"] != 200:
             return push
 

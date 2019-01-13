@@ -63,6 +63,9 @@ class IRC(object):
 
 def sendMessages(pool, messages):
     try:
+        '''
+        TODO: check is pool.ssl is true or false and setup the sockets accordingly.
+        '''
         irc = IRC()
         irc.connect(pool.host, pool.port, pool.channels, pool.nick, pool.password)
 

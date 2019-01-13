@@ -1,10 +1,11 @@
+import json
 import os
 import sys
 sys.path.append(os.path.dirname(os.path.realpath(__file__)) + '../')
 from irc import Colors
 
 
-def Push(payload):
+def Push(payload, repos):
  
     ref  = payload["ref"]
     colors = Colors()
@@ -36,10 +37,27 @@ def Push(payload):
         messages   = []
         commits    = payload["commits"]
         repo       = payload["repository"]["name"]
+        fullName   = payload["repository"]["full_name"]
         user       = payload["pusher"]["name"]
         length     = len(commits)
         branch     = ref.split("/", maxsplit=2)[2]
         compareUrl = payload["compare"]
+
+        # Check if the pool has allowed branches set.
+        # If they do, make sure that this branch is included
+        for repo in repos:
+            if repo == fullName:
+                if branches is None:
+                    break
+                elif branch not in repo["branches"]:
+                    return {
+                        "statusCode": 202,
+                        "body": json.dumps({
+                            "success": True,
+                            "message": "Received branch '%s' for repo '%s', but no pool is configured for it." % branch, fullName
+                        })
+                    }
+            
 
         # Summary Message
         messages.append(

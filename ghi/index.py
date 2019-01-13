@@ -50,8 +50,8 @@ def handler(event, context=None):
                     "message": "payload validation failed"
                 })
             }
-  
-        githubResult = parsePayload(githubEvent, githubPayload)
+
+        githubResult = parsePayload(githubEvent, githubPayload, pool["pool"].repos)
         if githubResult["statusCode"] != 200:
             return githubResult
 
