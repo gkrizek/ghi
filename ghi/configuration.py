@@ -6,11 +6,12 @@ import yaml
 
 class Pool(object):
 
-    def __init__(self, name, repos, host, port, nick, password, channels):
+    def __init__(self, name, repos, host, port, ssl, nick, password, channels):
         self.name = name
         self.repos = repos
         self.host = host
         self.port = port
+        self.ssl = ssl
         self.nick = nick
         self.password = password
         self.channels = channels
@@ -104,6 +105,8 @@ def getConfiguration():
             repos = pool['github']['repos']
             if type(repos) is not list:
                 raise TypeError("'repos' is not a list")
+            if len(repos) < 1:
+                raise TypeError("'repos' must contain at least 1 item")
 
             generatedRepos = []
             for repo in repos:
@@ -124,18 +127,40 @@ def getConfiguration():
                 if type(secret) is not str:
                     raise TypeError("'secret' is not a string")
 
+                if 'branches' in repo:
+                    branches = repo['branches']
+                    if type(branches) is not list:
+                        raise TypeError("'branches' is not a list")
+                    if len(branches) < 1:
+                        raise TypeError("'branches' must contain at least 1 item")
+                else:
+                    branches = None
+
                 generatedRepos.append({
                     "name": fullName,
-                    "secret": secret
+                    "secret": secret,
+                    "branches": branches
                 })
 
             host = pool['irc']['host']
             if type(host) is not str:
                 raise TypeError("'host' is not a string")
 
-            port = pool['irc']['port']
-            if type(port) is not int:
-                raise TypeError("'port' is not an integer")
+            if "ssl" in pool['irc']:
+                ssl = pool['irc']['ssl']
+                if type(ssl) is not bool:
+                    raise TypeError("'ssl' is not a boolean")
+            else:
+                ssl = True
+
+            if "port" in pool['irc']:
+                port = pool['irc']['port']
+                if type(port) is not int:
+                    raise TypeError("'port' is not an integer")
+            elif ssl is True:
+                port = 6697
+            else:
+                port = 6667
 
             nick = pool['irc']['nick']
             if type(nick) is not str:
@@ -153,6 +178,8 @@ def getConfiguration():
             channels = pool['irc']['channels']
             if type(channels) is not list:
                 raise TypeError("'channels' is not a list")
+            if len(channels) < 1:
+                raise TypeError("'channels' must contain at least 1 item")
 
         except (KeyError, TypeError) as e:
             return {
@@ -169,6 +196,7 @@ def getConfiguration():
                 repos=generatedRepos,
                 host=host,
                 port=port,
+                ssl=ssl,
                 nick=nick,
                 password=password,
                 channels=channels
