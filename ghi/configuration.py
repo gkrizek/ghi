@@ -6,6 +6,7 @@ import yaml
 
 class Pool(object):
 
+
     def __init__(self, name, repos, host, port, ssl, nick, password, channels):
         self.name = name
         self.repos = repos

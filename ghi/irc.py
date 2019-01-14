@@ -1,5 +1,6 @@
 import json
 import socket
+import ssl
 from time import sleep
 
 class Colors(object):
@@ -31,8 +32,14 @@ class Colors(object):
 class IRC(object):
 
 
-    def __init__(self):  
-        self.irc = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    def __init__(self, ssl):
+        if ssl is True:
+            self.irc = ssl.wrap_socket(
+                socket.socket(socket.AF_INET, socket.SOCK_STREAM),
+                ssl_version=ssl.PROTOCOL_TLSv1_2
+            )
+        else:
+            self.irc = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.irc.settimeout(10)
 
 
@@ -63,10 +70,7 @@ class IRC(object):
 
 def sendMessages(pool, messages):
     try:
-        '''
-        TODO: check is pool.ssl is true or false and setup the sockets accordingly.
-        '''
-        irc = IRC()
+        irc = IRC(pool.ssl)
         irc.connect(pool.host, pool.port, pool.channels, pool.nick, pool.password)
 
         # Wait until connection is established
