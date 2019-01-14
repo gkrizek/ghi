@@ -8,15 +8,15 @@ from index import handler
 
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s [ghi] %(message)s',
-    datefmt='%Y-%m-%d %H:%M:%S'
+    format="%(asctime)s [ghi] %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S"
 )
 
 
 def GetPort():
     # Allow a configurable port
     parser = argparse.ArgumentParser()
-    parser.add_argument('--port', dest='port', type=int, default=8888)
+    parser.add_argument("--port", dest="port", type=int, default=8888)
     args = parser.parse_args()
     return args.port
 
@@ -24,10 +24,10 @@ def GetPort():
 def CreatePayload(method, path, body, headers):
     # Create an payload that the index file will understand
     payload = {}
-    payload['httpMethod'] = method
-    payload['path'] = path
-    payload['headers'] = headers
-    payload['body'] = json.dumps(body)
+    payload["httpMethod"] = method
+    payload["path"] = path
+    payload["headers"] = headers
+    payload["body"] = json.dumps(body)
     return payload
 
 
@@ -60,8 +60,8 @@ class MainHandler(tornado.web.RequestHandler):
         # Invoke the application
         requestResult = handler(payload)
 
-        self.set_status(requestResult['statusCode'])
-        self.finish(requestResult['body'])
+        self.set_status(requestResult["statusCode"])
+        self.finish(requestResult["body"])
 
 
     def get(self):

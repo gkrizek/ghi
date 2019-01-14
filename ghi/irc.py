@@ -61,11 +61,11 @@ class IRC(object):
         for channel in channels:               
             self.irc.send(bytes("PART {}\n".format(channel), "UTF-8"))
         self.irc.send(bytes("QUIT\n", "UTF-8"))
-
+        self.irc.close()
 
     def get_text(self):
         text=self.irc.recv(2040)
-        return text.decode('utf-8')
+        return text.decode("utf-8")
         
 
 def sendMessages(pool, messages):
@@ -85,7 +85,6 @@ def sendMessages(pool, messages):
                 irc.send(channel, message)
 
         irc.disconnect(pool.channels)
-
 
     except Exception as e:
         return {

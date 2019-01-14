@@ -24,9 +24,9 @@ def getPool(payload, pools):
     else:
         # get the secret for this repo
         for requestedRepo in ownerPool.repos:
-            if repo == requestedRepo['name']:
-                repoName = requestedRepo['name']
-                repoSecret = requestedRepo['secret']
+            if repo == requestedRepo["name"]:
+                repoName = requestedRepo["name"]
+                repoSecret = requestedRepo["secret"]
         return {
             "statusCode": 200,
             "pool": ownerPool,

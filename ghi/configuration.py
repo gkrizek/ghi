@@ -20,7 +20,7 @@ class Pool(object):
 
     def containsRepo(self, repo):
         for configRepo in self.repos:                
-            if repo == configRepo['name']:
+            if repo == configRepo["name"]:
                 return True
         return False
 
@@ -33,8 +33,12 @@ def readFile(path):
 def getConfiguration():
 
     # Read configuarion file
-    # Looks first in os.getcwd, then ~/, then /tmp
-    if os.path.exists("%s/.ghi.yml" % os.getcwd()):
+    # First check if GHI_CONFIG_PATH is set
+    # If not, look in os.getcwd, then ~/, then /tmp
+    if "GH_CONFIG_PATH" in os.environ:
+        configFilePath = os.path.expanduser(os.environ["GH_CONFIG_PATH"])
+        
+    elif os.path.exists("%s/.ghi.yml" % os.getcwd()):
         configFilePath = "%s/.ghi.yml" % os.getcwd()
 
     elif os.path.exists("%s/.ghi.yaml" % os.getcwd()):
@@ -77,11 +81,11 @@ def getConfiguration():
 
     # Validate top level params
     try:
-        configVersion = config['version']
+        configVersion = config["version"]
         if type(configVersion) is not int:
             raise TypeError("'version' is not an integer")
 
-        configPools = config['pools']
+        configPools = config["pools"]
         if type(configPools) is not list:
             raise TypeError("'pools' is not a list")
 
@@ -99,11 +103,11 @@ def getConfiguration():
     for pool in configPools:
         # Configuration Validation
         try:
-            name = pool['name']
+            name = pool["name"]
             if type(name) is not str:
                 raise TypeError("'name' is not a string")
 
-            repos = pool['github']['repos']
+            repos = pool["github"]["repos"]
             if type(repos) is not list:
                 raise TypeError("'repos' is not a list")
             if len(repos) < 1:
@@ -111,25 +115,25 @@ def getConfiguration():
 
             generatedRepos = []
             for repo in repos:
-                fullName = repo['name']
+                fullName = repo["name"]
                 if type(fullName) is not str:
                     raise TypeError("'name' is not a string")
                 
-                if fullName.count('/') == 0:
+                if fullName.count("/") == 0:
                     raise TypeError("repo name must be the full name. Ex: owner/repo")
 
-                repoOwner = fullName.split('/', maxsplit=1)[0].upper()
-                repoName = fullName.split('/', maxsplit=1)[1].upper()
+                repoOwner = fullName.split("/", maxsplit=1)[0].upper()
+                repoName = fullName.split("/", maxsplit=1)[1].upper()
 
                 if "GHI_GITHUB_SECRET_{}_{}".format(repoOwner,repoName) in os.environ:
                     secret = "GHI_GITHUB_SECRET_{}_{}".format(repoOwner,repoName)
                 else:
-                    secret = repo['secret']
+                    secret = repo["secret"]
                 if type(secret) is not str:
                     raise TypeError("'secret' is not a string")
 
-                if 'branches' in repo:
-                    branches = repo['branches']
+                if "branches" in repo:
+                    branches = repo["branches"]
                     if type(branches) is not list:
                         raise TypeError("'branches' is not a list")
                     if len(branches) < 1:
@@ -143,19 +147,19 @@ def getConfiguration():
                     "branches": branches
                 })
 
-            host = pool['irc']['host']
+            host = pool["irc"]["host"]
             if type(host) is not str:
                 raise TypeError("'host' is not a string")
 
-            if "ssl" in pool['irc']:
-                ssl = pool['irc']['ssl']
+            if "ssl" in pool["irc"]:
+                ssl = pool["irc"]["ssl"]
                 if type(ssl) is not bool:
                     raise TypeError("'ssl' is not a boolean")
             else:
                 ssl = True
 
-            if "port" in pool['irc']:
-                port = pool['irc']['port']
+            if "port" in pool["irc"]:
+                port = pool["irc"]["port"]
                 if type(port) is not int:
                     raise TypeError("'port' is not an integer")
             elif ssl is True:
@@ -163,20 +167,20 @@ def getConfiguration():
             else:
                 port = 6667
 
-            nick = pool['irc']['nick']
+            nick = pool["irc"]["nick"]
             if type(nick) is not str:
                 raise TypeError("'nick' is not a string")
 
             if "GHI_IRC_PASSWORD" in os.environ:
                 password = os.environ["GHI_IRC_PASSWORD"]
-            elif 'password' in pool['irc']:
-                password = pool['irc']['password']
+            elif "password" in pool["irc"]:
+                password = pool["irc"]["password"]
             else:
                 password = None
             if type(password) not in [str, None]:
                 raise TypeError("'password' is not a string")
 
-            channels = pool['irc']['channels']
+            channels = pool["irc"]["channels"]
             if type(channels) is not list:
                 raise TypeError("'channels' is not a list")
             if len(channels) < 1:
