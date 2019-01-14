@@ -5,7 +5,7 @@ sys.path.append(os.path.dirname(os.path.realpath(__file__)) + "../")
 from irc import Colors
 
 
-def Push(payload, repos):
+def Push(payload, poolRepos):
  
     ref  = payload["ref"]
     colors = Colors()
@@ -45,11 +45,11 @@ def Push(payload, repos):
 
         # Check if the pool has allowed branches set.
         # If they do, make sure that this branch is included
-        for repo in repos:
-            if repo == fullName:
-                if repo["branches"] is None:
+        for poolRepo in poolRepos:
+            if poolRepo == fullName:
+                if poolRepo["branches"] is None:
                     break
-                elif branch not in repo["branches"]:
+                elif branch not in poolRepo["branches"]:
                     return {
                         "statusCode": 202,
                         "body": json.dumps({
@@ -69,7 +69,7 @@ def Push(payload, repos):
                 branch     = branch,
                 compareUrl = compareUrl,
                 blue       = colors.dark_blue,
-                gray       = colors.light_gray,
+                gray       = colors.dark_gray,
                 purple     = colors.light_purple,
                 green      = colors.light_green,
                 underline  = colors.underline,
@@ -87,13 +87,13 @@ def Push(payload, repos):
                 commitMessage = commitMessage[0:74] + "..."
 
             messages.append(
-                "{purple}{repo}{reset}/{green}{branch}{reset} {gray}{shortCommit}{reset} {blue}{user}{reset}: {message}".format(
+                "{purple}{repo}{reset}/{green}{branch}{reset} {gray}{shortCommit}{reset} {teal}{user}{reset}: {message}".format(
                     repo        = repo,
                     branch      = branch,
                     shortCommit = commit["id"][0:7],
                     user        = user,
                     message     = commitMessage,
-                    blue       = colors.dark_blue,
+                    teal       = colors.light_teal,
                     gray       = colors.dark_gray,
                     purple     = colors.light_purple,
                     green      = colors.light_green,

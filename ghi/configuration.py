@@ -177,7 +177,7 @@ def getConfiguration():
                 password = pool["irc"]["password"]
             else:
                 password = None
-            if type(password) not in [str, None]:
+            if password and type(password) is not str:
                 raise TypeError("'password' is not a string")
 
             channels = pool["irc"]["channels"]
