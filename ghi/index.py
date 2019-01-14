@@ -11,7 +11,6 @@ from validation import validatePayload
 def handler(event, context=None):
     # ensure it"s a valid request
     if event and "body" in event and "headers" in event:
-
         # validate and load configuration file
         configuration = getConfiguration()
         if configuration["statusCode"] != 200:
@@ -22,6 +21,8 @@ def handler(event, context=None):
         try:
             githubSignature = event["headers"]["X-Hub-Signature"]
             githubEvent = event["headers"]["X-GitHub-Event"]
+        except KeyError as e:
+            githubEvent = event["headers"]["X-Github-Event"]
         except KeyError as e:
             return {
                 "statusCode": 400,
