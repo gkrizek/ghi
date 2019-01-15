@@ -12,19 +12,19 @@ def Push(payload, poolRepos):
     if ref.startswith("refs/tags"):
         # Tag was pushed
         message = (
-            "{purple}[{repo}]{reset} {gray}{user}{reset} pushed tag "
-            "{green}{tag}{reset}: {blue}{underline}{compareUrl}{reset}"
+            "[{light_purple}{repo}{reset}] {gray}{user}{reset} pushed tag "
+            "{dark_purple}{tag}{reset}: {blue}{underline}{compareUrl}{reset}"
         ).format(
-            repo       = payload["repository"]["name"],
-            user       = payload["pusher"]["name"],
-            tag        = ref.split("/", maxsplit=2)[2],
-            compareUrl = payload["compare"],
-            blue       = colors.dark_blue,
-            gray       = colors.light_gray,
-            purple     = colors.light_purple,
-            green      = colors.light_green,
-            underline  = colors.underline,
-            reset      = colors.reset
+            repo         = payload["repository"]["name"],
+            user         = payload["pusher"]["name"],
+            tag          = ref.split("/", maxsplit=2)[2],
+            compareUrl   = payload["compare"],
+            blue         = colors.dark_blue,
+            gray         = colors.dark_gray,
+            light_purple = colors.light_purple,
+            dark_purple  = colors.dark_purple,
+            underline    = colors.underline,
+            reset        = colors.reset
         )
 
         return {
@@ -61,20 +61,20 @@ def Push(payload, poolRepos):
 
         # Summary Message
         messages.append(
-            "{purple}[{repo}]{reset} {gray}{user}{reset} pushed {bold}{length}{reset} "
-            "commit(s) to {green}{branch}{reset}: {blue}{underline}{compareUrl}{reset}".format(
-                repo       = repo,
-                user       = user,
-                length     = length,
-                branch     = branch,
-                compareUrl = compareUrl,
-                blue       = colors.dark_blue,
-                gray       = colors.dark_gray,
-                purple     = colors.light_purple,
-                green      = colors.light_green,
-                underline  = colors.underline,
-                bold       = colors.bold,
-                reset      = colors.reset
+            "[{light_purple}{repo}{reset}] {gray}{user}{reset} pushed {bold}{length}{reset} "
+            "commit(s) to {dark_purple}{branch}{reset}: {blue}{underline}{compareUrl}{reset}".format(
+                repo         = repo,
+                user         = user,
+                length       = length,
+                branch       = branch,
+                compareUrl   = compareUrl,
+                blue         = colors.dark_blue,
+                gray         = colors.light_gray,
+                light_purple = colors.light_purple,
+                dark_purple  = colors.dark_purple,
+                underline    = colors.underline,
+                bold         = colors.bold,
+                reset        = colors.reset
 
             )
         )
@@ -90,17 +90,17 @@ def Push(payload, poolRepos):
                 commitMessage = commitMessage[0:74] + "..."
 
             messages.append(
-                "{purple}{repo}{reset}/{green}{branch}{reset} {gray}{shortCommit}{reset} {teal}{user}{reset}: {message}".format(
-                    repo        = repo,
-                    branch      = branch,
-                    shortCommit = commit["id"][0:7],
-                    user        = user,
-                    message     = commitMessage,
-                    teal       = colors.light_teal,
-                    gray       = colors.dark_gray,
-                    purple     = colors.light_purple,
-                    green      = colors.light_green,
-                    reset      = colors.reset
+                "{light_purple}{repo}{reset}/{dark_purple}{branch}{reset} {dark_gray}{shortCommit}{reset} {light_gray}{user}{reset}: {message}".format(
+                    repo         = repo,
+                    branch       = branch,
+                    shortCommit  = commit["id"][0:7],
+                    user         = user,
+                    message      = commitMessage,
+                    light_gray   = colors.light_gray,
+                    dark_gray    = colors.dark_gray,
+                    light_purple = colors.light_purple,
+                    dark_purple  = colors.dark_purple,
+                    reset        = colors.reset
                 )
             )
             num += 1
