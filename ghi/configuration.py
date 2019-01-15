@@ -98,7 +98,8 @@ def getConfiguration():
             })
         }
 
-    # for each pool, validate and create a Pool object. append to array
+    # for each pool, validate and create a Pool object, append to array
+    globalRepos = []
     pools = []
     for pool in configPools:
         # Configuration Validation
@@ -122,6 +123,9 @@ def getConfiguration():
                 if fullName.count("/") == 0:
                     raise TypeError("repo name must be the full name. Ex: owner/repo")
 
+                if fullName in globalRepos:
+                    raise ValueError("Duplicate repo in config: %s" % fullName)
+
                 repoOwner = fullName.split("/", maxsplit=1)[0].upper()
                 repoName = fullName.split("/", maxsplit=1)[1].upper()
 
@@ -141,6 +145,7 @@ def getConfiguration():
                 else:
                     branches = None
 
+                globalRepos.append(fullName)
                 generatedRepos.append({
                     "name": fullName,
                     "secret": secret,
