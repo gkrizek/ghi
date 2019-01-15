@@ -186,6 +186,13 @@ def getConfiguration():
             if len(channels) < 1:
                 raise TypeError("'channels' must contain at least 1 item")
 
+            generatedChannels = []
+            for channel in channels:
+                if channel.startswith("#"):
+                    generatedChannels.append(channel)
+                else:
+                    generatedChannels.append("#"+channel)
+
         except (KeyError, TypeError) as e:
             return {
                 "statusCode": 500,
@@ -204,7 +211,7 @@ def getConfiguration():
                 ssl=ssl,
                 nick=nick,
                 password=password,
-                channels=channels
+                channels=generatedChannels
             )
         )
 
