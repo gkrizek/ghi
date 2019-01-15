@@ -45,7 +45,7 @@ class IRC(object):
             self.irc = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         
 
-    def get_text(self):
+    def getText(self):
         text=self.irc.recv(2040)
         return text.decode("UTF-8")
 
@@ -53,7 +53,7 @@ class IRC(object):
     def waitAndSee(self, search):
         tries = 0
         while True:
-            text = self.get_text().decode("UTF-8")
+            text = self.getText().decode("UTF-8")
             '''
             TODO: Maybe have a config of some sort to turn on printing of text
             '''
@@ -82,12 +82,15 @@ class IRC(object):
         self.irc.send(bytes("AUTHENTICATE "+auth+"\n", "UTF-8"))
         self.waitAndSee(r'(.*)903(.*):SASL authentication successful(.*)')
         self.irc.send(bytes("CAP END\n", "UTF-8"))
-        return
 
 
-    def send_message(self, channel, message):
+    def sendMessage(self, channel, message):
         self.irc.send(bytes("PRIVMSG {} :{}\n".format(channel, message), "UTF-8"))
- 
+
+
+    def sendPing(self, text):
+        self.irc.send(bytes(text.replace('PING', 'PONG'), "UTF-8"))
+
 
     def connect(self, host, port, channels, nick, password):
         self.irc.connect((host, port))  
@@ -115,21 +118,21 @@ def sendMessages(pool, messages):
 
         # Wait until connection is established
         while True:    
-            text = irc.get_text()
+            text = irc.getText()
             print(text)
-            if "End of /NAMES list." in text:
+            if re.search(r'(.*)End of /NAMES list.(.*)', text, re.MULTILINE):
                 break
-            elif "ERROR :" in text:
-                raise ValueError(text)
-            '''
-            TODO: Listen for more bad things here, like :tolkien.freenode.net 433 * test-bot-123-new :Nickname is already in use.
-            So we can exit earlier and not waste time on a timeout
-            '''
+            elif re.search(r'(.*)PING(.*)', text, re.MULTILINE):
+                irc.sendPing(text)
+            elif re.search(r'(.*)433(.*)Nickname is already in use(.*)', text, re.MULTILINE):
+                raise ConnectionError("Nickname is already in use")
+            elif re.search(r'(.*)ERROR :(.*)', text, re.MULTILINE):
+                raise ConnectionError(text)
             sleep(0.25)
 
         for channel in pool.channels:
             for message in messages:
-                irc.send_message(channel, message)
+                irc.sendMessage(channel, message)
 
         irc.disconnect(pool.channels)
 
