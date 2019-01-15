@@ -52,12 +52,12 @@ def handler(event, context=None):
                 })
             }
 
-        githubResult = parsePayload(githubEvent, githubPayload, pool["pool"].repos)
-        if githubResult["statusCode"] != 200:
-            return githubResult
+        getMessages = parsePayload(githubEvent, githubPayload, pool["pool"].repos)
+        if getMessages["statusCode"] != 200:
+            return getMessages
 
         # Send messages to the designated IRC channel(s)
-        sendToIrc = sendMessages(pool["pool"], githubResult["messages"])
+        sendToIrc = sendMessages(pool["pool"], getMessages["messages"])
         if sendToIrc["statusCode"] != 200:
             return sendToIrc
 

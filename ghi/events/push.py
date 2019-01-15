@@ -79,8 +79,11 @@ def Push(payload, poolRepos):
             )
         )
 
-        # Individual commits
+        # First 3 individual commits
+        num = 0
         for commit in commits:
+            if num > 3:
+                break
             # If commit message is longer than 75 characters, truncate.
             commitMessage = commit["message"]
             if len(commitMessage) > 75:
@@ -100,6 +103,7 @@ def Push(payload, poolRepos):
                     reset      = colors.reset
                 )
             )
+            num += 1
 
         return {
             "statusCode": 200,

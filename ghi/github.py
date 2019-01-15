@@ -62,6 +62,14 @@ def parsePayload(event, payload, repos):
             "messages": pullRequest["messages"]
         }
 
+
+    elif event == "ping":
+        return {
+            "statusCode": 200,
+            "messages": "pong"
+        }
+
+
     else:
         return {
             "statusCode": 202,

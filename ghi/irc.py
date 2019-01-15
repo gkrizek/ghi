@@ -5,6 +5,7 @@ import socket
 import ssl
 from time import sleep
 
+
 class Colors(object):
 
 
@@ -44,29 +45,32 @@ class IRC(object):
             self.irc = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         
 
-
     def get_text(self):
         text=self.irc.recv(2040)
         return text.decode("UTF-8")
 
 
+    def waitAndSee(self, search):
+        tries = 0
+        while True:
+            text = self.get_text().decode("UTF-8")
+            '''
+            TODO: Maybe have a config of some sort to turn on printing of text
+            '''
+            if tries > 20:
+                raise ConnectionError("Unable to connect to IRC: %s" % text) 
+            ack = re.search(search, text, re.MULTILINE)
+            if ack:
+                return
+            sleep(0.25)
+            tries += 1
+
+
     def authenticate(self, nick, password):
         self.irc.send(bytes("CAP REQ :sasl\n", "UTF-8"))
-        while True:
-            text = self.get_text()
-            print(text)
-            capAck = re.search(r'(.*)CAP(.*)ACK(.*)', text, re.MULTILINE)
-            if capAck:
-                break
-
+        self.waitAndSee(r'(.*)CAP(.*)ACK(.*)')
         self.irc.send(bytes("AUTHENTICATE PLAIN\n", "UTF-8"))
-        while True:
-            text = self.get_text()
-            print(text)
-            authAck = re.search(r'(.*)AUTHENTICATE \+(.*)', text, re.MULTILINE)
-            if authAck:
-                break
-        
+        self.waitAndSee(r'(.*)AUTHENTICATE \+(.*)')
         auth = (
             "{nick}\0{nick}\0{password}"
         ).format(
@@ -76,13 +80,7 @@ class IRC(object):
         auth = base64.encodestring(auth.encode("UTF-8"))
         auth = auth.decode("UTF-8").rstrip("\n")
         self.irc.send(bytes("AUTHENTICATE "+auth+"\n", "UTF-8"))
-        while True:
-            text = self.get_text()
-            print(text)
-            authSuccess = re.search(r'(.*)903(.*):SASL authentication successful(.*)', text, re.MULTILINE)
-            if authSuccess:
-                break
-
+        self.waitAndSee(r'(.*)903(.*):SASL authentication successful(.*)')
         self.irc.send(bytes("CAP END\n", "UTF-8"))
         return
 
@@ -123,6 +121,10 @@ def sendMessages(pool, messages):
                 break
             elif "ERROR :" in text:
                 raise ValueError(text)
+            '''
+            TODO: Listen for more bad things here, like :tolkien.freenode.net 433 * test-bot-123-new :Nickname is already in use.
+            So we can exit earlier and not waste time on a timeout
+            '''
             sleep(0.25)
 
         for channel in pool.channels:
@@ -130,6 +132,14 @@ def sendMessages(pool, messages):
                 irc.send_message(channel, message)
 
         irc.disconnect(pool.channels)
+
+        return {
+            "statusCode": 200,
+            "body": json.dumps({
+                "success": True,
+                "message": "Messages sent successfully."
+            }) 
+        }
 
     except Exception as e:
         return {
@@ -139,11 +149,3 @@ def sendMessages(pool, messages):
                 "message": "There was a problem sending messages to IRC:\n%s" % e
             })
         }
-
-    return {
-        "statusCode": 200,
-        "body": json.dumps({
-            "success": True,
-            "message": "Messages sent successfully."
-        }) 
-    }
