@@ -126,7 +126,7 @@ def getConfiguration():
                 repoName = fullName.split("/", maxsplit=1)[1].upper()
 
                 if "GHI_GITHUB_SECRET_{}_{}".format(repoOwner,repoName) in os.environ:
-                    secret = "GHI_GITHUB_SECRET_{}_{}".format(repoOwner,repoName)
+                    secret = os.environ["GHI_GITHUB_SECRET_{}_{}".format(repoOwner,repoName)]
                 else:
                     secret = repo["secret"]
                 if type(secret) is not str:
@@ -171,8 +171,8 @@ def getConfiguration():
             if type(nick) is not str:
                 raise TypeError("'nick' is not a string")
 
-            if "GHI_IRC_PASSWORD" in os.environ:
-                password = os.environ["GHI_IRC_PASSWORD"]
+            if "GHI_IRC_PASSWORD_{}".format(name) in os.environ:
+                password = os.environ["GHI_IRC_PASSWORD_{}".format(name)]
             elif "password" in pool["irc"]:
                 password = pool["irc"]["password"]
             else:
