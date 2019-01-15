@@ -1,4 +1,5 @@
 import json
+import logging
 import os
 import sys
 sys.path.append(os.path.dirname(os.path.realpath(__file__)) + "../")
@@ -8,6 +9,7 @@ from irc import Colors
 def PullRequest(payload):
 
     action = payload["action"]
+    logging.info("Received action '%s'" % action)
     colors = Colors()
     if action in ["opened", "closed", "reopened"]:
         if action == "closed" and payload["pull_request"]["merged"]:
@@ -41,10 +43,12 @@ def PullRequest(payload):
         }
 
     else:
+        message = "Pull Request Action was %s. Doing nothing." % action
+        logging.info(message)
         return {
             "statusCode": 202,
             "body": json.dumps({
                 "success": True,
-                "message": "Pull Request Action was %s. Doing nothing." % action
+                "message": message
             })
         }

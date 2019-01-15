@@ -89,12 +89,21 @@ def getConfiguration():
         if type(configPools) is not list:
             raise TypeError("'pools' is not a list")
 
+        if "debug" in config:
+            debug = config["debug"]
+            if type(debug) is not bool:
+                raise TypeError("'pools' is not a boolean")
+        else:
+            debug = False
+
     except (KeyError, TypeError) as e:
+        errorMessage = "Missing or invalid parameter in configuration file: %s" % e
+        logging.error(errorMessage)
         return {
             "statusCode": 500,
             "body": json.dumps({
                 "success": False,
-                "message": "Missing or invalid parameter in configuration file: %s" % e
+                "message": errorMessage
             })
         }
 
@@ -199,11 +208,13 @@ def getConfiguration():
                     generatedChannels.append("#"+channel)
 
         except (KeyError, TypeError) as e:
+            errorMessage = "Missing or invalid parameter in configuration file: %s" % e
+            logging.error(errorMessage)
             return {
                 "statusCode": 500,
                 "body": json.dumps({
                     "success": False,
-                    "message": "Missing or invalid parameter in configuration file: %s" % e
+                    "message": errorMessage
                 })
             }
 
@@ -223,5 +234,6 @@ def getConfiguration():
     # If configuration is valid, return an array of pools
     return {
         "statusCode": 200,
+        "debug": debug,
         "pools": pools
     }

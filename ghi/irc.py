@@ -1,5 +1,6 @@
 import base64
 import json
+import logging
 import re
 import socket
 import ssl
@@ -54,9 +55,7 @@ class IRC(object):
         tries = 0
         while True:
             text = self.getText().decode("UTF-8")
-            '''
-            TODO: Maybe have a config of some sort to turn on printing of text
-            '''
+            logging.debug(text)
             if tries > 20:
                 raise ConnectionError("Unable to connect to IRC: %s" % text) 
             ack = re.search(search, text, re.MULTILINE)
@@ -93,6 +92,7 @@ class IRC(object):
 
 
     def connect(self, host, port, channels, nick, password):
+        logging.info("Connecting to {}:{} with nick {} and channels {}".format(host, port, nick, channels))
         self.irc.connect((host, port))  
         if password != None:
             self.authenticate(nick, password)                                                  
@@ -109,6 +109,7 @@ class IRC(object):
             self.irc.send(bytes("PART {}\n".format(channel), "UTF-8"))
         self.irc.send(bytes("QUIT\n", "UTF-8"))
         self.irc.close()
+        logging.info("Disconnected from IRC")
         
 
 def sendMessages(pool, messages):
@@ -119,7 +120,7 @@ def sendMessages(pool, messages):
         # Wait until connection is established
         while True:    
             text = irc.getText()
-            print(text)
+            logging.debug(text)
             if re.search(r'(.*)End of /NAMES list.(.*)', text, re.MULTILINE):
                 break
             elif re.search(r'(.*)PING(.*)', text, re.MULTILINE):
@@ -136,19 +137,23 @@ def sendMessages(pool, messages):
 
         irc.disconnect(pool.channels)
 
+        resultMessage = "Successfully sent {} messages.".format(len(messages))
+        logging.info(resultMessage)
         return {
             "statusCode": 200,
             "body": json.dumps({
                 "success": True,
-                "message": "Messages sent successfully."
+                "message": resultMessage
             }) 
         }
 
     except Exception as e:
+        errorMessage = "There was a problem sending messages to IRC:\n%s" % e
+        logging.error(errorMessage)
         return {
             "statusCode": 500,
             "body": json.dumps({
                 "success": False,
-                "message": "There was a problem sending messages to IRC:\n%s" % e
+                "message": errorMessage
             })
         }

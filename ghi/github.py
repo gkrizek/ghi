@@ -1,4 +1,5 @@
 import json
+import logging
 from events.pull_request import PullRequest
 from events.push import Push
 
@@ -14,11 +15,13 @@ def getPool(payload, pools):
             break
 
     if ownerPool is None:
+        message = "Received repository '%s', but no pool is configured for it." % repo
+        logging.info(message)
         return {
             "statusCode": 202,
             "body": json.dumps({
                 "success": True,
-                "message": "Received repository '%s', but no pool is configured for it." % repo
+                "message": message
             })
         }
     else:
@@ -27,6 +30,7 @@ def getPool(payload, pools):
             if repo == requestedRepo["name"]:
                 repoName = requestedRepo["name"]
                 repoSecret = requestedRepo["secret"]
+        logging.info("Matched repo '{}' to pool '{}'".format(repoName,ownerPool.name))
         return {
             "statusCode": 200,
             "pool": ownerPool,
@@ -39,6 +43,7 @@ def parsePayload(event, payload, repos):
 
     # for every supported event: find the pool, parse the payload, and return IRC messages
     payload = json.loads(payload)
+    logging.info("Received the '%s' event" % event)
     if event == "push":
         # Create messages based on the payload
         push = Push(payload, repos)
@@ -71,10 +76,12 @@ def parsePayload(event, payload, repos):
 
 
     else:
+        message = "Received event '%s'. Doing nothing." % event
+        logging.info(message)
         return {
             "statusCode": 202,
             "body": json.dumps({
                 "success": True,
-                "message": "Received event '%s'. Doing nothing." % event
+                "message": message
             })
         }

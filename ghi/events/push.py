@@ -1,4 +1,5 @@
 import json
+import logging
 import os
 import sys
 sys.path.append(os.path.dirname(os.path.realpath(__file__)) + "../")
@@ -8,6 +9,7 @@ from irc import Colors
 def Push(payload, poolRepos):
  
     ref  = payload["ref"]
+    logging.info("Received ref '%s'" % ref)
     colors = Colors()
     if ref.startswith("refs/tags"):
         # Tag was pushed
@@ -50,11 +52,13 @@ def Push(payload, poolRepos):
                 if poolRepo["branches"] is None:
                     break
                 elif branch not in poolRepo["branches"]:
+                    message = "Received branch '%s' for repo '%s', but no pool is configured for it." % (branch, fullName)
+                    logging.info(message)
                     return {
                         "statusCode": 202,
                         "body": json.dumps({
                             "success": True,
-                            "message": "Received branch '%s' for repo '%s', but no pool is configured for it." % (branch, fullName)
+                            "message": message
                         })
                     }
             
