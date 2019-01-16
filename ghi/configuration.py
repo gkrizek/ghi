@@ -30,6 +30,17 @@ def readFile(path):
     return configFile.read()
 
 
+class GlobalConfig(object):
+
+
+    def __init__(self, host, port, ssl, nick, password):
+        self.host = host
+        self.port = port
+        self.ssl = ssl
+        self.nick = nick
+        self.password = password
+
+
 def getConfiguration():
 
     # Read configuarion file
@@ -89,6 +100,13 @@ def getConfiguration():
         if type(configPools) is not list:
             raise TypeError("'pools' is not a list")
 
+        if "global" in config:
+            globalConfig = config["global"]
+            if type(globalConfig) is not dict:
+                raise TypeError("'global' is not a dict")
+        else:
+            globalConfig = {}
+
         if "debug" in config:
             debug = config["debug"]
             if type(debug) is not bool:
@@ -107,6 +125,52 @@ def getConfiguration():
             })
         }
 
+    # GLOBAL
+    # validate and set global parameters
+    if "host" in globalConfig:
+        globalHost = globalConfig["host"]
+        if type(globalHost) is not str:
+            raise TypeError("'host' is not a string")
+    else:
+        globalHost = None
+    
+    if "port" in globalConfig:
+        globalPort = globalConfig["port"]
+        if type(globalPort) is not int:
+            raise TypeError("'port' is not a integer")
+    else:
+        globalPort = None
+
+    if "ssl" in globalConfig:
+        globalSsl = globalConfig["ssl"]
+        if type(globalSsl) is not bool:
+            raise TypeError("'ssl' is not a boolean")
+    else:
+        globalSsl = None
+
+    if "nick" in globalConfig:
+        globalNick = globalConfig["nick"]
+        if type(globalNick) is not int:
+            raise TypeError("'nick' is not a string")
+    else:
+        globalNick = None
+
+    if "password" in globalConfig:
+        globalPassword = globalConfig["password"]
+        if type(globalPassword) is not int:
+            raise TypeError("'password' is not a string")
+    else:
+        globalPassword = None
+
+    globalSettings = GlobalConfig(
+        host     = globalHost,
+        port     = globalPort,
+        ssl      = globalSsl,
+        nick     = globalNick,
+        password = globalPassword
+    )
+
+    # POOLS
     # for each pool, validate and create a Pool object, append to array
     globalRepos = []
     pools = []
@@ -117,11 +181,13 @@ def getConfiguration():
             if type(name) is not str:
                 raise TypeError("'name' is not a string")
 
+
             repos = pool["github"]["repos"]
             if type(repos) is not list:
                 raise TypeError("'repos' is not a list")
             if len(repos) < 1:
                 raise TypeError("'repos' must contain at least 1 item")
+
 
             generatedRepos = []
             for repo in repos:
@@ -161,34 +227,54 @@ def getConfiguration():
                     "branches": branches
                 })
 
-            host = pool["irc"]["host"]
+
+            if "host" in pool["irc"]:
+                host = pool["irc"]["host"]
+            elif globalSettings.host:
+                host = globalSettings.host
+            else:
+                raise KeyError("host")
             if type(host) is not str:
                 raise TypeError("'host' is not a string")
 
+
             if "ssl" in pool["irc"]:
                 ssl = pool["irc"]["ssl"]
-                if type(ssl) is not bool:
-                    raise TypeError("'ssl' is not a boolean")
+            elif globalSettings.ssl:
+                ssl = globalSettings.ssl
             else:
                 ssl = True
+            if type(ssl) is not bool:
+                raise TypeError("'ssl' is not a boolean")
+
 
             if "port" in pool["irc"]:
                 port = pool["irc"]["port"]
-                if type(port) is not int:
-                    raise TypeError("'port' is not an integer")
+            elif globalSettings.port:
+                port = globalSettings.port
             elif ssl is True:
                 port = 6697
             else:
                 port = 6667
+            if type(port) is not int:
+                raise TypeError("'port' is not an integer")
 
-            nick = pool["irc"]["nick"]
+            if "nick" in pool["irc"]:
+                nick = pool["irc"]["nick"]
+            elif globalSettings.nick:
+                nick = globalSettings.nick
+            else:
+                raise KeyError("nick")
             if type(nick) is not str:
                 raise TypeError("'nick' is not a string")
+
 
             if "GHI_IRC_PASSWORD_{}".format(name) in os.environ:
                 password = os.environ["GHI_IRC_PASSWORD_{}".format(name)]
             elif "password" in pool["irc"]:
                 password = pool["irc"]["password"]
+            elif globalSettings.password:
+                password = globalSettings.password
             else:
                 password = None
             if password and type(password) is not str:
