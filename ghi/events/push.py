@@ -9,16 +9,23 @@ from irc import Colors
 def Push(payload, poolRepos):
  
     ref  = payload["ref"]
+    if payload["deleted"] and not payload["created"]:
+        action = "deleted"
+    elif payload["forced"]:
+        action = "force pushed"
+    else:
+        action = "pushed"
     logging.info("Received ref '%s'" % ref)
     colors = Colors()
     if ref.startswith("refs/tags"):
         # Tag was pushed
         message = (
-            "[{light_purple}{repo}{reset}] {gray}{user}{reset} pushed tag "
+            "[{light_purple}{repo}{reset}] {gray}{user}{reset} {action} tag "
             "{dark_purple}{tag}{reset}: {blue}{underline}{compareUrl}{reset}"
         ).format(
             repo         = payload["repository"]["name"],
             user         = payload["pusher"]["name"],
+            action       = action,
             tag          = ref.split("/", maxsplit=2)[2],
             compareUrl   = payload["compare"],
             blue         = colors.dark_blue,
@@ -65,10 +72,11 @@ def Push(payload, poolRepos):
 
         # Summary Message
         messages.append(
-            "[{light_purple}{repo}{reset}] {gray}{user}{reset} pushed {bold}{length}{reset} "
+            "[{light_purple}{repo}{reset}] {gray}{user}{reset} {action} {bold}{length}{reset} "
             "commit(s) to {dark_purple}{branch}{reset}: {blue}{underline}{compareUrl}{reset}".format(
                 repo         = repo,
                 user         = user,
+                action       = action,
                 length       = length,
                 branch       = branch,
                 compareUrl   = compareUrl,
