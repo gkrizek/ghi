@@ -7,9 +7,10 @@ import yaml
 class Pool(object):
 
 
-    def __init__(self, name, repos, host, port, ssl, nick, password, channels):
+    def __init__(self, name, repos, shorten, host, port, ssl, nick, password, channels):
         self.name = name
         self.repos = repos
+        self.shorten = shorten
         self.host = host
         self.port = port
         self.ssl = ssl
@@ -33,12 +34,13 @@ def readFile(path):
 class GlobalConfig(object):
 
 
-    def __init__(self, host, port, ssl, nick, password):
+    def __init__(self, host, port, ssl, nick, password, shorten):
         self.host = host
         self.port = port
         self.ssl = ssl
         self.nick = nick
         self.password = password
+        self.shorten = shorten
 
 
 def getConfiguration():
@@ -162,12 +164,20 @@ def getConfiguration():
     else:
         globalPassword = None
 
+    if "shorten_url" in globalConfig:
+        globalShorten = globalConfig["shorten_url"]
+        if type(globalShorten) is not bool:
+            raise TypeError("'shorten_url' is not a boolean")
+    else:
+        globalShorten = None
+
     globalSettings = GlobalConfig(
         host     = globalHost,
         port     = globalPort,
         ssl      = globalSsl,
         nick     = globalNick,
-        password = globalPassword
+        password = globalPassword,
+        shorten  = globalShorten
     )
 
     # POOLS
@@ -188,6 +198,16 @@ def getConfiguration():
             if len(repos) < 1:
                 raise TypeError("'repos' must contain at least 1 item")
 
+
+            if "shorten_url" in pool["github"]:
+                shorten = pool["github"]["shorten_url"]
+            elif globalSettings.shorten:
+                shorten = globalSettings.shorten
+            else:
+                shorten = False
+            if type(shorten) is not bool:
+                raise TypeError("'shorten_url' is not a boolean")
+                
 
             generatedRepos = []
             for repo in repos:
@@ -259,6 +279,7 @@ def getConfiguration():
             if type(port) is not int:
                 raise TypeError("'port' is not an integer")
 
+
             if "nick" in pool["irc"]:
                 nick = pool["irc"]["nick"]
             elif globalSettings.nick:
@@ -279,6 +300,7 @@ def getConfiguration():
                 password = None
             if password and type(password) is not str:
                 raise TypeError("'password' is not a string")
+
 
             channels = pool["irc"]["channels"]
             if type(channels) is not list:
@@ -308,6 +330,7 @@ def getConfiguration():
             Pool(
                 name=name,
                 repos=generatedRepos,
+                shorten=shorten,
                 host=host,
                 port=port,
                 ssl=ssl,

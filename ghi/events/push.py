@@ -3,18 +3,26 @@ import logging
 import os
 import sys
 sys.path.append(os.path.dirname(os.path.realpath(__file__)) + "../")
+from github import ShortenUrl
 from irc import Colors
 
 
-def Push(payload, poolRepos):
+def Push(payload, poolRepos, shorten):
  
     ref  = payload["ref"]
+
     if payload["deleted"] and not payload["created"]:
         action = "deleted"
     elif payload["forced"]:
         action = "force pushed"
     else:
         action = "pushed"
+
+    if shorten:
+        url = ShortenUrl(payload["compare"])
+    else:
+        url = payload["compare"]
+
     logging.info("Received ref '%s'" % ref)
     colors = Colors()
     if ref.startswith("refs/tags"):
@@ -27,7 +35,7 @@ def Push(payload, poolRepos):
             user         = payload["pusher"]["name"],
             action       = action,
             tag          = ref.split("/", maxsplit=2)[2],
-            compareUrl   = payload["compare"],
+            compareUrl   = url,
             blue         = colors.dark_blue,
             gray         = colors.dark_gray,
             light_purple = colors.light_purple,
@@ -50,7 +58,6 @@ def Push(payload, poolRepos):
         user       = payload["pusher"]["name"]
         length     = len(commits)
         branch     = ref.split("/", maxsplit=2)[2]
-        compareUrl = payload["compare"]
 
         # Check if the pool has allowed branches set.
         # If they do, make sure that this branch is included
@@ -79,7 +86,7 @@ def Push(payload, poolRepos):
                 action       = action,
                 length       = length,
                 branch       = branch,
-                compareUrl   = compareUrl,
+                compareUrl   = url,
                 blue         = colors.dark_blue,
                 gray         = colors.light_gray,
                 light_purple = colors.light_purple,

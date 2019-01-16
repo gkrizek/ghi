@@ -17,6 +17,7 @@ setup(
     url="https://github.com/gkrizek/ghi",
     install_requires=[
         "PyYAML",
+        "requests"
         "tornado"
     ]
 )

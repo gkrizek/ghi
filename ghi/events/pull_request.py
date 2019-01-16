@@ -3,14 +3,20 @@ import logging
 import os
 import sys
 sys.path.append(os.path.dirname(os.path.realpath(__file__)) + "../")
+from github import ShortenUrl
 from irc import Colors
 
 
-def PullRequest(payload):
+def PullRequest(payload, shorten):
 
     action = payload["action"]
     logging.info("Received action '%s'" % action)
     colors = Colors()
+    if shorten:
+        url = ShortenUrl(payload["pull_request"]["url"])
+    else:
+        url = payload["pull_request"]["url"]
+
     if action in ["opened", "closed", "reopened"]:
         if action == "closed" and payload["pull_request"]["merged"]:
             action = "merged"
@@ -26,7 +32,7 @@ def PullRequest(payload):
             title        = payload["pull_request"]["title"],
             baseBranch   = payload["pull_request"]["base"]["ref"],
             headBranch   = payload["pull_request"]["head"]["ref"],
-            url          = payload["pull_request"]["url"],
+            url          = url,
             blue         = colors.dark_blue,
             gray         = colors.light_gray,
             light_purple = colors.light_purple,

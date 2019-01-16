@@ -85,7 +85,7 @@ def handler(event, context=None):
                 })
             }
 
-        getMessages = parsePayload(githubEvent, githubPayload, pool["pool"].repos)
+        getMessages = parsePayload(githubEvent, githubPayload, pool["pool"].repos, pool["pool"].shorten)
         if getMessages["statusCode"] != 200:
             return getMessages
 
