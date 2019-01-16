@@ -1,4 +1,4 @@
-# ghi
+![ghi](images/ghi.png)
 
 **G**it**H**ub **I**RC Notification Service
 
