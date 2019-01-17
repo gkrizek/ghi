@@ -2,8 +2,8 @@ import json
 import logging
 import os
 import sys
-sys.path.append(os.path.dirname(os.path.realpath(__file__)) + "../")
-from github import ShortenUrl
+sys.path.append(os.path.dirname(os.path.realpath(__file__)) + "/../")
+import github
 from irc import Colors
 
 
@@ -13,7 +13,7 @@ def PullRequest(payload, shorten):
     logging.info("Received action '%s'" % action)
     colors = Colors()
     if shorten:
-        url = ShortenUrl(payload["pull_request"]["url"])
+        url = github.shortenUrl(payload["pull_request"]["url"])
     else:
         url = payload["pull_request"]["url"]
 

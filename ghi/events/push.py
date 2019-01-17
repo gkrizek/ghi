@@ -3,7 +3,7 @@ import logging
 import os
 import sys
 sys.path.append(os.path.dirname(os.path.realpath(__file__)) + "../")
-from github import ShortenUrl
+import github
 from irc import Colors
 
 
@@ -19,7 +19,7 @@ def Push(payload, poolRepos, shorten):
         action = "pushed"
 
     if shorten:
-        url = ShortenUrl(payload["compare"])
+        url = github.shortenUrl(payload["compare"])
     else:
         url = payload["compare"]
 
