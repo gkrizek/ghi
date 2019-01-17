@@ -54,7 +54,7 @@ class IRC(object):
     def waitAndSee(self, search):
         tries = 0
         while True:
-            text = self.getText().decode("UTF-8")
+            text = self.getText()
             logging.debug(text)
             if tries > 20:
                 raise ConnectionError("Unable to connect to IRC: %s" % text) 
@@ -84,15 +84,16 @@ class IRC(object):
 
 
     def sendMessage(self, channel, message):
+        sleep(0.5)
         self.irc.send(bytes("PRIVMSG {} :{}\n".format(channel, message), "UTF-8"))
 
 
-    def sendPing(self, text):
+    def sendPong(self, text):
         self.irc.send(bytes(text.replace('PING', 'PONG'), "UTF-8"))
 
 
     def connect(self, host, port, channels, nick, password):
-        logging.info("Connecting to {}:{} with nick {} and channels {}".format(host, port, nick, channels))
+        logging.info("Connecting to {}:{} with nick {} and channels: {}".format(host, port, nick, ','.join(channels)))
         self.irc.connect((host, port))  
         if password != None:
             self.authenticate(nick, password)                                                  
@@ -124,7 +125,7 @@ def sendMessages(pool, messages):
             if re.search(r'(.*)End of /NAMES list.(.*)', text, re.MULTILINE):
                 break
             elif re.search(r'(.*)PING(.*)', text, re.MULTILINE):
-                irc.sendPing(text)
+                irc.sendPong(text)
             elif re.search(r'(.*)433(.*)Nickname is already in use(.*)', text, re.MULTILINE):
                 raise ConnectionError("Nickname is already in use")
             elif re.search(r'(.*)ERROR :(.*)', text, re.MULTILINE):
@@ -148,7 +149,7 @@ def sendMessages(pool, messages):
         }
 
     except Exception as e:
-        errorMessage = "There was a problem sending messages to IRC:\n%s" % e
+        errorMessage = "There was a problem sending messages to IRC: %s" % e
         logging.error(errorMessage)
         return {
             "statusCode": 500,
