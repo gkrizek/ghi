@@ -44,9 +44,9 @@ def shortenUrl(longUrl):
     gitIo = "https://git.io/create?url={}".format(longUrl)
     try:
         code = requests.post(gitIo)
-        logging.debug(code)
-        if code.status_code == 201:
-            result = "https://git.io/{}".format(code)
+        logging.debug(code.text)
+        if code.status_code == 200:
+            result = "https://git.io/{}".format(code.text)
         else:
             result = longUrl
     except Exception:
