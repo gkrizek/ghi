@@ -33,11 +33,8 @@ def handler(event, context=None):
             return configuration
 
         # Enable debug if set in config
-        if configuration['debug']:
-            logging.basicConfig(
-                level=logging.DEBUG,
-                format="%(message)s"
-            )
+        if configuration["debug"]:
+            logging.getLogger().setLevel(logging.DEBUG)
 
         # verify the request is from GtitHub
         githubPayload = event["body"]
