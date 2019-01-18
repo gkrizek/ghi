@@ -13,7 +13,7 @@ def handler(event, context=None):
     # ensure it"s a valid request
     if event and "body" in event and "headers" in event:
 
-        if "X-Ghi" in event["headers"]:
+        if "X-Ghi-Server" in event["headers"]:
             # was invoked by local server
             logging.basicConfig(
                 level=logging.INFO,

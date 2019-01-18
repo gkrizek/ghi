@@ -92,6 +92,7 @@ class MainHandler(tornado.web.RequestHandler):
         headers = {}
         for (k,v) in sorted(self.request.headers.get_all()):
             headers[k] = v
+        headers["X-Ghi-Server"] = True
 
         payload = CreatePayload(
             method=self.request.method,
