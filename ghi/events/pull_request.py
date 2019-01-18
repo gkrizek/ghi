@@ -13,9 +13,9 @@ def PullRequest(payload, shorten):
     logging.info("Received action '%s'" % action)
     colors = Colors()
     if shorten:
-        url = github.shortenUrl(payload["pull_request"]["url"])
+        url = github.shortenUrl(payload["pull_request"]["html_url"])
     else:
-        url = payload["pull_request"]["url"]
+        url = payload["pull_request"]["html_url"]
 
     if action in ["opened", "closed", "reopened"]:
         if action == "closed" and payload["pull_request"]["merged"]:
