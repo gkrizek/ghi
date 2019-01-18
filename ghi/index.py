@@ -11,8 +11,15 @@ from validation import validatePayload
 
 
 def handler(event, context=None):
-    # ensure it"s a valid request
+    # ensure it's a valid request
     if event and "body" in event and "headers" in event:
+
+        # AWS Lambda configures the logger before executing this script
+        # We want to remove their configurations and set our own
+        log = logging.getLogger()
+        if log.handlers:
+            for handler in log.handlers:
+                log.removeHandler(handler)
 
         if "X-Ghi-Server" in event["headers"]:
             # was invoked by local server

@@ -8,6 +8,9 @@ awslambda = boto3.client('lambda')
 def InvokeSelf(event):
 
     functionName = os.getenv("AWS_LAMBDA_FUNCTION_NAME")
+    event["headers"]["X-Ghi-Invoked"] = "true"
+
+    logging.info("Received intial invocation. Invoking self a second time.")
 
     invoke = awslambda.invoke(
         FunctionName=functionName,
