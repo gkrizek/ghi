@@ -1,9 +1,14 @@
 import argparse
 import json
 import logging
+import os
+import sys
 import tornado.ioloop
 import tornado.web
+import uuid
 from index import handler
+from tornado.process import Subprocess
+from tornado import gen
 
 
 logging.basicConfig(
@@ -12,18 +17,48 @@ logging.basicConfig(
     datefmt="%Y-%m-%d %H:%M:%S"
 )
 
-
+ 
 def GetArgs():
     # Allow a configurable port
     parser = argparse.ArgumentParser()
-    parser.add_argument("--port", dest="port", help="Port to listen on", type=int, default=8888)
-    parser.add_argument('--quick-response', dest='quickresponse', help="Reply to client immediately, then process event", action='store_true')
+    parser.add_argument("--port", dest="port", help="Port to listen on", type=int)
     args = parser.parse_args()
+    if args.port:
+        port = args.port
+    elif "GHI_PORT" in os.environ:
+        port = os.getenv("GHI_PORT")
+    else:
+        port = 8888
     return {
-        "port": args.port,
-        "response": args.quickresponse
+        "port": port
     }
 
+
+@gen.coroutine
+def InvokeFunction(payload):
+    python = sys.executable
+    if __file__.startswith('ghi'):
+        index = 'ghi.index'
+    else:
+        index = 'index'
+
+    command = (
+        "{python} -c '"
+        "from {index} import handler;print(handler({payload}))'"
+    ).format(
+        python=python,
+        index=index,
+        payload=json.dumps(payload)
+    )
+    process = Subprocess([command], stdout=Subprocess.STREAM, stderr=Subprocess.STREAM, shell=True)
+    response, logs = yield [process.stdout.read_until_close(),process.stderr.read_until_close()]
+    logging.info("Start UUID: %s" % payload["uuid"])
+    logging.info("Response:")
+    logging.info(response.decode("UTF-8").strip())
+    logging.info("Logs:")
+    for log in logs.decode("UTF-8").splitlines():
+        logging.info(log)
+    logging.info("Stop UUID: %s" % payload["uuid"])
 
 def CreatePayload(method, path, body, headers):
     # Create an payload that the index file will understand
@@ -32,6 +67,7 @@ def CreatePayload(method, path, body, headers):
     payload["path"] = path
     payload["headers"] = headers
     payload["body"] = json.dumps(body)
+    payload["uuid"] = str(uuid.uuid4())
     return payload
 
 
@@ -62,22 +98,12 @@ class MainHandler(tornado.web.RequestHandler):
             headers=headers
         )
 
-        # Reply to the client immediately, then process event
-        quickResponse = GetArgs()['response']
-        if quickResponse:
-            # Return first, then execute function
-            self.set_status(200)
-            self.finish('{"success": true,"message":"Request received."}')
-            
-            handler(payload)
-        
-        else:
-            # Invoke the application
-            requestResult = handler(payload)
+        logging.info("UUID: %s" % payload["uuid"])
 
-            self.set_status(requestResult["statusCode"])
-            self.finish(requestResult["body"])
+        InvokeFunction(payload)
 
+        self.set_status(200)
+        self.finish('{"success": true,"message":"Request received.","uuid":"%s"}' % payload["uuid"])
 
     def get(self):
         self.set_status(404)
