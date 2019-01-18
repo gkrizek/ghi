@@ -84,7 +84,6 @@ class IRC(object):
 
 
     def sendMessage(self, channel, message):
-        sleep(0.5)
         self.irc.send(bytes("PRIVMSG {} :{}\n".format(channel, message), "UTF-8"))
 
 
@@ -104,8 +103,6 @@ class IRC(object):
  
 
     def disconnect(self, channels):
-        # don't disconnect too quickly to ensure all messages are sent
-        sleep(1)
         for channel in channels:               
             self.irc.send(bytes("PART {}\n".format(channel), "UTF-8"))
         self.irc.send(bytes("QUIT\n", "UTF-8"))
@@ -117,7 +114,7 @@ def sendMessages(pool, messages):
     try:
         irc = IRC(pool.ssl)
         irc.connect(pool.host, pool.port, pool.channels, pool.nick, pool.password)
-
+        
         # Wait until connection is established
         while True:    
             text = irc.getText()

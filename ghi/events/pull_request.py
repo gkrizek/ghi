@@ -23,7 +23,7 @@ def PullRequest(payload, shorten):
 
         message = (
             "[{light_purple}{repo}{reset}] {gray}{user}{reset} {bold}{action}{reset} pull request {bold}#{number}{reset}:"
-            " {title} ({dark_purple}{baseBranch}{reset}...{dark_purple}{headBranch}{reset}) {blue}{underline}{url}{reset}"
+            " {title} ({dark_purple}{baseBranch}{reset}...{dark_purple}{headBranch}{reset}) {blue}{underline}{url}{reset}\r\n"
         ).format(
             repo         = payload["pull_request"]["base"]["repo"]["name"],
             user         = payload["pull_request"]["user"]["login"],

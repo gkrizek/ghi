@@ -335,7 +335,6 @@ def getConfiguration():
                     "message": errorMessage
                 })
             }
-        print(shorten)
         pools.append(
             Pool(
                 name=name,

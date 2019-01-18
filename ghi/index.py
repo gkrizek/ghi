@@ -67,6 +67,7 @@ def handler(event, context=None):
             return pool
 
         # check signatures of request
+        '''
         validPayload = validatePayload(
             payload=githubPayload,
             signature=githubSignature,
@@ -81,6 +82,7 @@ def handler(event, context=None):
                     "message": "payload validation failed"
                 })
             }
+        '''
 
         getMessages = parsePayload(githubEvent, githubPayload, pool["pool"].repos, pool["pool"].shorten)
         if getMessages["statusCode"] != 200:

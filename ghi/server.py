@@ -59,6 +59,8 @@ def InvokeFunction(payload):
     for log in logs.decode("UTF-8").splitlines():
         logging.info(log)
     logging.info("Stop UUID: %s" % payload["uuid"])
+    logging.info("")
+    
 
 def CreatePayload(method, path, body, headers):
     # Create an payload that the index file will understand

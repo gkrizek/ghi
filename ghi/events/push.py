@@ -29,7 +29,7 @@ def Push(payload, poolRepos, shorten):
         # Tag was pushed
         message = (
             "[{light_purple}{repo}{reset}] {gray}{user}{reset} {action} tag "
-            "{dark_purple}{tag}{reset}: {blue}{underline}{compareUrl}{reset}"
+            "{dark_purple}{tag}{reset}: {blue}{underline}{compareUrl}{reset}\r\n"
         ).format(
             repo         = payload["repository"]["name"],
             user         = payload["pusher"]["name"],
@@ -80,7 +80,7 @@ def Push(payload, poolRepos, shorten):
         # Summary Message
         messages.append(
             "[{light_purple}{repo}{reset}] {gray}{user}{reset} {action} {bold}{length}{reset} "
-            "commit(s) to {dark_purple}{branch}{reset}: {blue}{underline}{compareUrl}{reset}".format(
+            "commit(s) to {dark_purple}{branch}{reset}: {blue}{underline}{compareUrl}{reset}\r\n".format(
                 repo         = repo,
                 user         = user,
                 action       = action,
@@ -109,7 +109,7 @@ def Push(payload, poolRepos, shorten):
                 commitMessage = commitMessage[0:74] + "..."
 
             messages.append(
-                "{light_purple}{repo}{reset}/{dark_purple}{branch}{reset} {dark_gray}{shortCommit}{reset} {light_gray}{user}{reset}: {message}".format(
+                "{light_purple}{repo}{reset}/{dark_purple}{branch}{reset} {dark_gray}{shortCommit}{reset} {light_gray}{user}{reset}: {message}\r\n".format(
                     repo         = repo,
                     branch       = branch,
                     shortCommit  = commit["id"][0:7],
