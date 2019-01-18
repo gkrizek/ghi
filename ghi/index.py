@@ -67,22 +67,22 @@ def handler(event, context=None):
             return pool
 
         # check signatures of request
-        '''
-        validPayload = validatePayload(
-            payload=githubPayload,
-            signature=githubSignature,
-            secret=pool["secret"]
-        )
-        if not validPayload:
-            logging.error("GitHub payload validation failed")
-            return {
-                "statusCode": 401,
-                "body": json.dumps({
-                    "success": False,
-                    "message": "payload validation failed"
-                })
-            }
-        '''
+        print(pool)
+        if pool["verify"]:
+            validPayload = validatePayload(
+                payload=githubPayload,
+                signature=githubSignature,
+                secret=pool["secret"]
+            )
+            if not validPayload:
+                logging.error("GitHub payload validation failed")
+                return {
+                    "statusCode": 401,
+                    "body": json.dumps({
+                        "success": False,
+                        "message": "payload validation failed"
+                    })
+                }
 
         getMessages = parsePayload(githubEvent, githubPayload, pool["pool"].repos, pool["pool"].shorten)
         if getMessages["statusCode"] != 200:

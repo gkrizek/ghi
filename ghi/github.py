@@ -31,12 +31,14 @@ def getPool(payload, pools):
             if repo == requestedRepo["name"]:
                 repoName = requestedRepo["name"]
                 repoSecret = requestedRepo["secret"]
+                repoVerify = requestedRepo["verify"]
         logging.info("Matched repo '{}' to pool '{}'".format(repoName,ownerPool.name))
         return {
             "statusCode": 200,
             "pool": ownerPool,
             "name": repoName,
-            "secret": repoSecret
+            "secret": repoSecret,
+            "verify": repoVerify
         }
 
 

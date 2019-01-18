@@ -34,13 +34,14 @@ def readFile(path):
 class GlobalConfig(object):
 
 
-    def __init__(self, host, port, ssl, nick, password, shorten):
+    def __init__(self, host, port, ssl, nick, password, shorten, verify):
         self.host = host
         self.port = port
         self.ssl = ssl
         self.nick = nick
         self.password = password
         self.shorten = shorten
+        self.verify = verify
 
 
 def getConfiguration():
@@ -178,8 +179,16 @@ def getConfiguration():
                 raise TypeError("'shorten_url' is not a boolean")
         else:
             globalShorten = None
+        
+        if "verify" in globalConfig["github"]:
+            globalVerify = globalConfig["github"]["verify"]
+            if type(globalVerify) is not bool:
+                raise TypeError("'verify' is not a boolean")
+        else:
+            globalVerify = None
     else:
         globalShorten = None
+        globalVerify = None
 
     globalSettings = GlobalConfig(
         host     = globalHost,
@@ -187,7 +196,8 @@ def getConfiguration():
         ssl      = globalSsl,
         nick     = globalNick,
         password = globalPassword,
-        shorten  = globalShorten
+        shorten  = globalShorten,
+        verify   = globalVerify
     )
 
     # POOLS
@@ -250,11 +260,21 @@ def getConfiguration():
                 else:
                     branches = None
 
+                if "verify" in repo:
+                    verifyPayload = repo["verify"]
+                elif globalSettings.verify is not None:
+                    verifyPayload = globalSettings.verify
+                else:
+                    verifyPayload = True
+                if type(verifyPayload) is not bool:
+                    raise TypeError("'verify' is not a boolean")
+
                 globalRepos.append(fullName)
                 generatedRepos.append({
                     "name": fullName,
                     "secret": secret,
-                    "branches": branches
+                    "branches": branches,
+                    "verify": verifyPayload
                 })
 
 
