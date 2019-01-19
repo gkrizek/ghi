@@ -241,15 +241,20 @@ def getConfiguration():
                 if fullName in globalRepos:
                     raise ValueError("Duplicate repo in config: %s" % fullName)
 
-                repoOwner = fullName.split("/", maxsplit=1)[0].upper()
-                repoName = fullName.split("/", maxsplit=1)[1].upper()
+                if repo["verify"] or globalSettings.verify:
+                    repoOwner = fullName.split("/", maxsplit=1)[0].upper()
+                    repoName = fullName.split("/", maxsplit=1)[1].upper()
+                    # Remove special characters
+                    repoName = ''.join(l for l in repoName if l.isalnum())
 
-                if "GHI_GITHUB_SECRET_{}_{}".format(repoOwner,repoName) in os.environ:
-                    secret = os.environ["GHI_GITHUB_SECRET_{}_{}".format(repoOwner,repoName)]
+                    if "GHI_GITHUB_SECRET_{}_{}".format(repoOwner,repoName) in os.environ:
+                        secret = os.environ["GHI_GITHUB_SECRET_{}_{}".format(repoOwner,repoName)]
+                    else:
+                        secret = repo["secret"]
+                    if type(secret) is not str:
+                        raise TypeError("'secret' is not a string")
                 else:
-                    secret = repo["secret"]
-                if type(secret) is not str:
-                    raise TypeError("'secret' is not a string")
+                    secret = None
 
                 if "branches" in repo:
                     branches = repo["branches"]
@@ -320,8 +325,8 @@ def getConfiguration():
                 raise TypeError("'nick' is not a string")
 
 
-            if "GHI_IRC_PASSWORD_{}".format(name) in os.environ:
-                password = os.environ["GHI_IRC_PASSWORD_{}".format(name)]
+            if "GHI_IRC_PASSWORD_{}".format(name.upper()) in os.environ:
+                password = os.environ["GHI_IRC_PASSWORD_{}".format(name.upper())]
             elif "password" in pool["irc"]:
                 password = pool["irc"]["password"]
             elif globalSettings.password:
