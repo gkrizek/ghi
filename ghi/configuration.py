@@ -98,6 +98,8 @@ def getConfiguration():
         configVersion = config["version"]
         if type(configVersion) is not int:
             raise TypeError("'version' is not an integer")
+        elif configVersion in [1]:
+            raise ValueError("Invalid version")
 
         configPools = config["pools"]
         if type(configPools) is not list:
