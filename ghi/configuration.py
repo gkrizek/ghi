@@ -241,6 +241,16 @@ def getConfiguration():
                 if fullName in globalRepos:
                     raise ValueError("Duplicate repo in config: %s" % fullName)
 
+                if "verify" in repo:
+                    verifyPayload = repo["verify"]
+                elif globalSettings.verify is not None:
+                    verifyPayload = globalSettings.verify
+                else:
+                    verifyPayload = True
+                if type(verifyPayload) is not bool:
+                    raise TypeError("'verify' is not a boolean")
+                repo["verify"] = verifyPayload
+
                 if repo["verify"] or globalSettings.verify:
                     repoOwner = fullName.split("/", maxsplit=1)[0].upper()
                     repoName = fullName.split("/", maxsplit=1)[1].upper()
@@ -264,15 +274,6 @@ def getConfiguration():
                         raise TypeError("'branches' must contain at least 1 item")
                 else:
                     branches = None
-
-                if "verify" in repo:
-                    verifyPayload = repo["verify"]
-                elif globalSettings.verify is not None:
-                    verifyPayload = globalSettings.verify
-                else:
-                    verifyPayload = True
-                if type(verifyPayload) is not bool:
-                    raise TypeError("'verify' is not a boolean")
 
                 globalRepos.append(fullName)
                 generatedRepos.append({

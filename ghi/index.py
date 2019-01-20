@@ -84,7 +84,6 @@ def handler(event, context=None):
             return pool
 
         # check signatures of request
-        print(pool)
         if pool["verify"]:
             validPayload = validatePayload(
                 payload=githubPayload,
