@@ -86,8 +86,9 @@ def parsePayload(event, payload, repos, shorten):
 
 
     elif event == "ping":
+        logging.info("Sent 'pong'")
         return {
-            "statusCode": 200,
+            "statusCode": 202,
             "messages": "pong"
         }
 
