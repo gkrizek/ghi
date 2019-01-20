@@ -28,7 +28,7 @@ def Push(payload, poolRepos, shorten):
     if ref.startswith("refs/tags"):
         # Tag was pushed
         message = (
-            "\n[{light_purple}{repo}{reset}] {gray}{user}{reset} {action} tag "
+            "[{light_purple}{repo}{reset}] {gray}{user}{reset} {action} tag "
             "{dark_purple}{tag}{reset}: {blue}{underline}{compareUrl}{reset}\r\n"
         ).format(
             repo         = payload["repository"]["name"],
@@ -61,7 +61,6 @@ def Push(payload, poolRepos, shorten):
 
         # Check if the pool has allowed branches set.
         # If they do, make sure that this branch is included
-        print(poolRepos)
         for poolRepo in poolRepos:
             if poolRepo["name"] == fullName:
                 if poolRepo["branches"] is None:
@@ -79,15 +78,20 @@ def Push(payload, poolRepos, shorten):
             
 
         # Summary Message
+        if len(commits) > 1:
+            plural = "s"
+        else:
+            plural = ""
         messages.append(
-            "\n[{light_purple}{repo}{reset}] {gray}{user}{reset} {action} {bold}{length}{reset} "
-            "commit(s) to {dark_purple}{branch}{reset}: {blue}{underline}{compareUrl}{reset}\r\n".format(
+            "[{light_purple}{repo}{reset}] {gray}{user}{reset} {action} {bold}{length}{reset} "
+            "commit{plural} to {dark_purple}{branch}{reset}: {blue}{underline}{compareUrl}{reset}\r\n".format(
                 repo         = repo,
                 user         = user,
                 action       = action,
                 length       = length,
                 branch       = branch,
                 compareUrl   = url,
+                plural       = plural,
                 blue         = colors.dark_blue,
                 gray         = colors.light_gray,
                 light_purple = colors.light_purple,

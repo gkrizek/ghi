@@ -66,9 +66,9 @@ class IRC(object):
 
 
     def authenticate(self, nick, password):
-        self.irc.send(bytes("CAP REQ :sasl\n", "UTF-8"))
+        self.irc.send(bytes("CAP REQ :sasl\r\n", "UTF-8"))
         self.waitAndSee(r'(.*)CAP(.*)ACK(.*)')
-        self.irc.send(bytes("AUTHENTICATE PLAIN\n", "UTF-8"))
+        self.irc.send(bytes("AUTHENTICATE PLAIN\r\n", "UTF-8"))
         self.waitAndSee(r'(.*)AUTHENTICATE \+(.*)')
         auth = (
             "{nick}\0{nick}\0{password}"
@@ -78,13 +78,13 @@ class IRC(object):
         )
         auth = base64.encodestring(auth.encode("UTF-8"))
         auth = auth.decode("UTF-8").rstrip("\n")
-        self.irc.send(bytes("AUTHENTICATE "+auth+"\n", "UTF-8"))
+        self.irc.send(bytes("AUTHENTICATE "+auth+"\r\n", "UTF-8"))
         self.waitAndSee(r'(.*)903(.*):SASL authentication successful(.*)')
-        self.irc.send(bytes("CAP END\n", "UTF-8"))
+        self.irc.send(bytes("CAP END\r\n", "UTF-8"))
 
 
     def sendMessage(self, channel, message):
-        self.irc.send(bytes("PRIVMSG {} :{}\n".format(channel, message), "UTF-8"))
+        self.irc.send(bytes("PRIVMSG {} :{}\r\n".format(channel, message), "UTF-8"))
 
 
     def sendPong(self, text):
@@ -96,16 +96,23 @@ class IRC(object):
         self.irc.connect((host, port))  
         if password != None:
             self.authenticate(nick, password)                                                  
-        self.irc.send(bytes("USER {nick} {nick} {nick} {nick}\n".format(nick=nick), "UTF-8"))
-        self.irc.send(bytes("NICK {}\n".format(nick), "UTF-8"))
+        self.irc.send(bytes("USER {nick} {nick} {nick} {nick}\r\n".format(nick=nick), "UTF-8"))
+        self.irc.send(bytes("NICK {}\r\n".format(nick), "UTF-8"))
         for channel in channels:          
-            self.irc.send(bytes("JOIN {}\n".format(channel), "UTF-8"))
+            self.irc.send(bytes("JOIN {}\r\n".format(channel), "UTF-8"))
  
 
     def disconnect(self, channels):
         for channel in channels:               
-            self.irc.send(bytes("PART {}\n".format(channel), "UTF-8"))
-        self.irc.send(bytes("QUIT\n", "UTF-8"))
+            self.irc.send(bytes("PART {}\r\n".format(channel), "UTF-8"))
+        self.irc.send(bytes("QUIT\r\n", "UTF-8"))
+        # Get rest of logs for debug
+        while True:
+            text = self.getText()
+            logging.debug(text)
+            ack = re.search(r'(.*)QUIT :Client Quit(.*)', text, re.MULTILINE)
+            if ack:
+                break
         self.irc.close()
         logging.info("Disconnected from IRC")
         
@@ -119,7 +126,7 @@ def sendMessages(pool, messages):
         while True:    
             text = irc.getText()
             logging.debug(text)
-            if re.search(r'(.*)End of /NAMES list.(.*)', text, re.MULTILINE):
+            if re.search(r'(.*)00[1-4] '+pool.nick+'(.*)', text, re.MULTILINE):
                 break
             elif re.search(r'(.*)PING(.*)', text, re.MULTILINE):
                 irc.sendPong(text)
