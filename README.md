@@ -7,7 +7,7 @@ Ghi (pronounced 'ghee') is a relay between GitHub and IRC. It was created to tak
 
 # Getting Started
 
-Ghi was designed and written to be ran in [AWS Lambda](https://aws.amazon.com/lambda/) with [API Gateway](https://aws.amazon.com/api-gateway/). However, I've also created a very simple HTTP server implimentation so Ghi can be ran on any server if desired. Ghi is configured entirely with the `.ghi.yml` file. In this file you will set all necessary information including repositories, IRC nick, IRC host, channels, etc.
+Ghi was designed and written to be ran in [AWS Lambda](https://aws.amazon.com/lambda/) with [API Gateway](https://aws.amazon.com/api-gateway/). However, I've also created a very simple HTTP server implementation so Ghi can be ran on any server if desired. Ghi is configured entirely with the `.ghi.yml` file. In this file you will set all necessary information including repositories, IRC nick, IRC host, channels, etc.
 
 ## Setting Configuration
 
@@ -66,13 +66,13 @@ To set the password for your IRC bot with an environment variable, use `GHI_IRC_
 
 ### GitHub
 
-To configure GitHub to send events to your Ghi instance, you create a webhook in your repository. [Here is the GitHub documentation on how to do that](https://developer.github.com/webhooks/creating/). The Payload URL is whatever URL you have given your Ghi instance. _The path does not matter to Ghi_. Ghi does not check the path of the request and will respond to any path. The Content Type should be `application/json`. It is highly recommended to use a Secret for the webhook, but not required. You can then select whichever Event Types you want Ghi to act on, however [check that Ghi supports the event first.](#supportedeventtypes)
+To configure GitHub to send events to your Ghi instance, you create a webhook in your repository. [Here is the GitHub documentation on how to do that](https://developer.github.com/webhooks/creating/). The Payload URL is whatever URL you have given your Ghi instance. _The path does not matter to Ghi_. Ghi does not check the path of the request and will respond to any path. The Content Type should be `application/json`. It is highly recommended to use a Secret for the webhook, but not required. You can then select whichever Event Types you want Ghi to act on, however [check that Ghi supports the event first.](#supported-event-types)
 
 ## Deployment
 
 ### AWS Lambda
 
-Ghi was written to be ran in AWS Lambda and is the recommended deployment type. There are many ways to deploy Ghi to Lambda, I've found the simpliest soluton to be [SAM](https://aws.amazon.com/serverless/sam/). I've included several example SAM template in the [examples/SAM.md](examples/SAM.md) file. These can get you started running Ghi in Lambda quickly, but your own deployment method will work as well. If using your own process, be sure to create an API Gateway as well. During the build process be sure install the dependencies in the [`requirements.txt'](requirements.txt) file and add your `.ghi.yml` file. Below is the necessary information for running in Lambda:
+Ghi was written to be ran in AWS Lambda and is the recommended deployment type. There are many ways to deploy Ghi to Lambda, I've found the simplest solution to be [SAM](https://aws.amazon.com/serverless/sam/). I've included several example SAM template in the [examples/SAM.md](examples/SAM.md) file. These can get you started running Ghi in Lambda quickly, but your own deployment method will work as well. If using your own process, be sure to create an API Gateway as well. During the build process be sure install the dependencies in the [`requirements.txt`](requirements.txt) file and add your `.ghi.yml` file. Below is the necessary information for running in Lambda:
 
 - **runtime** - `python3.6`
 - **handler** - `index.handler`
@@ -81,13 +81,13 @@ Ghi was written to be ran in AWS Lambda and is the recommended deployment type. 
 
 ### Server
 
-Ghi comes with a minimal HTTP server that can be used to run Ghi on a server if desired. If you desire more advanced HTTP functionality like SSL, Error handling, load balancing, etc, you should use something like Nginx as a reverse proxy. To deploy, you can simply clone this repository or add Ghi to your existing deployment workflow. Ensure that during deployment you also bundle/install the dependencies in the [`requirements.txt'](requirements.txt) file and add your `.ghi.yml` file.
+Ghi comes with a minimal HTTP server that can be used to run Ghi on a server if desired. If you need more advanced HTTP functionality like SSL, Error handling, load balancing, etc, you should use something like Nginx as a reverse proxy. To deploy, you can simply clone this repository or add Ghi to your existing deployment workflow. Ensure that during deployment you also bundle/install the dependencies in the [`requirements.txt`](requirements.txt) file and add your `.ghi.yml` file.
 
 ## Running
 
 ### AWS Lambda
 
-After you have deployed your function to Lambda, there isn't much else needed for running Ghi. Simply make requests to the provisioned endpoint and API Gateway/Lambda will handle the rest. When running in Lambda, the default behaviour is to respond to the request instantly, then process the event. This is because the GitHub webhook expects a response in less than 10 seconds to be considered healthy. To accomplish this, we re-invoke the same lambda function again to process the event, then respond to the intial request. If you would like Ghi to only respond when the request is complete, you can set the environment variable `GHI_LONG_RESPONSE="true"`. This will make Ghi appear as failing in GitHub, but should still be working properly. This could also be helpful for debugging.
+After you have deployed your function to Lambda, there isn't much else needed for running Ghi. Simply make requests to the provisioned endpoint and API Gateway/Lambda will handle the rest. When running in Lambda, the default behavior is to respond to the request instantly, then process the event. This is because the GitHub webhook expects a response in less than 10 seconds to be considered healthy. To accomplish this, we re-invoke the same lambda function again to process the event, then respond to the intial request. If you would like Ghi to only respond when the request is complete, you can set the environment variable `GHI_LONG_RESPONSE="true"`. This will make Ghi appear as failing in GitHub, but should still be working properly. This could also be helpful for debugging.
 
 **Important Note:**
 
@@ -103,7 +103,7 @@ Once you have cloned or deployed Ghi to a server, you can run it by executing th
 $ python3 ghi/server.py --port 8080
 ```
 
-I have [provided an example service file](examples/ghi.service.md) to use with systemd to make starting/stoppping Ghi easier.
+I have [provided an example service file](examples/ghi.service.md) to use with systemd to make starting/stopping Ghi easier.
 
 # Configuration
 
@@ -187,13 +187,15 @@ pools: # required
       host: chat.freenode.net # required
       port: 6697 # optional, default is 6697 for ssl and 6667 for non-ssl
       ssl: true # optional default is true
-      nick: bitcoin-git # required
+      nick: my-irc-bot # required
       password: abc123 # optional, but if it's required by the nick it must be set here or with environment variable
       channels: # required
         - my-cool-channel # at least 1 channel is required
 ```
 
 If you define a parameter in the Global section and in your pool, the value in the pool will be used.
+
+[See the `examples`directory for `.ghi.yml` examples, as well as others.](examples/)
 
 **Important Note:**
 
