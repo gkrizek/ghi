@@ -49,8 +49,8 @@ def getConfiguration():
     # Read configuarion file
     # First check if GHI_CONFIG_PATH is set
     # If not, look in os.getcwd, then ~/, then /tmp
-    if "GH_CONFIG_PATH" in os.environ:
-        configFilePath = os.path.expanduser(os.environ["GH_CONFIG_PATH"])
+    if "GHI_CONFIG_PATH" in os.environ:
+        configFilePath = os.path.expanduser(os.environ["GHI_CONFIG_PATH"])
         
     elif os.path.exists("%s/.ghi.yml" % os.getcwd()):
         configFilePath = "%s/.ghi.yml" % os.getcwd()
