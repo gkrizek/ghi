@@ -2,6 +2,7 @@ import argparse
 import json
 import logging
 import os
+import signal
 import sys
 import tornado.ioloop
 import tornado.web
@@ -112,17 +113,28 @@ class MainHandler(tornado.web.RequestHandler):
         self.set_status(404)
         self.finish("Not Found")
 
+
 def application():
     return tornado.web.Application([
         (r"/.*", MainHandler),
     ])
+
+
+def ShutDown(signum, frame):
+    if signum:
+        logging.debug("Received SIGTERM")
+        logging.debug("Signum: " + str(signum))
+    logging.info("server is shutting down")
+    exit(0)
+
 
 if __name__ == "__main__":
     try:
         port = GetArgs()['port']
         app = application()
         app.listen(port)
+        signal.signal(signal.SIGTERM, ShutDown)
         logging.info("server listening on %s" % port)
         tornado.ioloop.IOLoop.current().start()
     except KeyboardInterrupt:
-        logging.info("server is shutting down")
+        ShutDown(None, None)
