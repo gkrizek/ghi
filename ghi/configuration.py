@@ -327,9 +327,10 @@ def getConfiguration():
             if type(nick) is not str:
                 raise TypeError("'nick' is not a string")
 
-
-            if "GHI_IRC_PASSWORD_{}".format(name.upper()) in os.environ:
-                password = os.environ["GHI_IRC_PASSWORD_{}".format(name.upper())]
+            envName = name.upper()
+            envName = ''.join(l for l in envName if l.isalnum())
+            if "GHI_IRC_PASSWORD_{}".format(envName) in os.environ:
+                password = os.environ["GHI_IRC_PASSWORD_{}".format(envName)]
             elif "password" in pool["irc"]:
                 password = pool["irc"]["password"]
             elif globalSettings.password:
