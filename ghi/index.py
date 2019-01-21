@@ -3,7 +3,6 @@ import sys
 sys.path.append(os.path.dirname(os.path.realpath(__file__)))
 import json
 import logging
-from aws import InvokeSelf
 from configuration import getConfiguration
 from github import getPool, parsePayload
 from irc import sendMessages
@@ -38,6 +37,7 @@ def handler(event, context=None):
         # then invoke itself to actually process the event.
         # This can be disabled by setting GHI_LONG_RESPONSE="true"
         if "requestContext" in event:
+            from aws import InvokeSelf
             # Was invoked by AWS
             if "GHI_LONG_RESPONSE" in os.environ and os.getenv("GHI_LONG_RESPONSE"):
                 pass
