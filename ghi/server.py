@@ -28,7 +28,7 @@ def GetArgs():
     elif "GHI_PORT" in os.environ:
         port = os.getenv("GHI_PORT")
     else:
-        port = 8888
+        port = 7890
     return {
         "port": port
     }
