@@ -26,6 +26,8 @@ Ghi comes with a minimal HTTP server that can be used to run Ghi on a server if 
 
 ```
 $ git clone https://github.com/gkrizek/ghi.git
+$ cd ghi/
+$ pip3 install -r requirements.txt
 ```
 
 ## Setting Configuration
