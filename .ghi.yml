@@ -1,0 +1,13 @@
+version: 1
+pools:
+  - name: pool-name
+  github:
+    repos:
+      - name: owner/repo
+        secret: abc123
+  irc:
+    host: chat.freenode.net
+    nick: my-irc-bot
+    password: myBotPassword123!
+    channels:
+      - channel1
