@@ -23,12 +23,14 @@ After=network.target
 [Service]
 Type=simple
 User=ubuntu
-WorkingDirectory=/home/ubuntu
-ExecStart=python3 /opt/ghi/ghi/server.py --port 8080 &>> /var/log/ghi.log
+WorkingDirectory=/home/ubuntu/ghi
+EnvironmentFile=/etc/default/ghi
+ExecStart=/bin/bash -c "PYTHONPATH="/home/ubuntu/ghi/ghi:$PYTHONPATH" python3 /home/ubuntu/ghi/ghi/server.py --port 8080 &>> /var/log/ghi.log
 Restart=on-failure
 RestartSec=3
-LimitNOFILE=4096
 
 [Install]
 WantedBy=multi-user.target
 ```
+
+_You might need to create the log file first because the user might not have permissions to /var/log_
