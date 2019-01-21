@@ -64,9 +64,10 @@ def handler(event, context=None):
 
         try:
             githubSignature = event["headers"]["X-Hub-Signature"]
-            githubEvent = event["headers"]["X-GitHub-Event"]
-        except KeyError as e:
-            githubEvent = event["headers"]["X-Github-Event"]
+            try:
+                githubEvent = event["headers"]["X-GitHub-Event"]
+            except KeyError as e:
+                githubEvent = event["headers"]["X-Github-Event"]
         except KeyError as e:
             errorMessage = "missing header in request: %s" % e
             logging.error(errorMessage)
