@@ -134,12 +134,27 @@ Ghi is configurable and supports lots of combinations of repositories, channels,
 
 **Pool Configuration Object**
 
-| Name    | Default                            | Description                      |
-| ------- |:----------------------------------:| --------------------------------:|
-| version | 1                                  | Version of the Ghi file          |
-| debug   | False                              | Enable/Disable Debug logging     |
-| global  | Global Configuration Object        | Set Global configuration options |
-| pools   | List of Pool Configuration Objects | Define all pool definitions      |
+| Name               | Default                                   | Required | Description                                          |
+|:------------------ |:-----------------------------------------:|:--------:| ----------------------------------------------------:|
+| name               | None                                      | Yes      | Name of the Pool                                     |
+| github:repos       | None                                      | Yes      | List of Repository Configuration Objects             |
+| github:shorten_url | False                                     | No       | Shorten all GitHub links with git.io                 |
+| irc:host           | None                                      | Yes      | Hostname for IRC Server                              |
+| irc:port           | 6697 if SSL enabled, 6667 if SSL disabled | No       | Port for IRC Server                                  |
+| irc:ssl            | True                                      | No       | Connect to IRC Server with SSL                       |
+| irc:nick           | None                                      | Yes      | IRC Nickname                                         |
+| irc:password       | None                                      | No       | IRC Password                                         |
+| irc:channels       | None                                      | Yes      | List of channels to send messages to                 |
+
+**Repository Configuration Object**
+
+| Name     | Default      | Required | Description                                              |
+|:-------- |:------------:|:--------:| --------------------------------------------------------:|
+| name     | None         | Yes      | Owner and name of the repository. Ex: `gkrizek/repo1`    |
+| secret   | None         | No       | Secret you created with the webhook to validate payloads |
+| branches | All branches | No       | List of branches in the repository to send messages for  |
+| verify   | True         | No       | Verify the payload with the `X-Hub-Signature` header     |
+
 
 **Example Configuration File**
 
@@ -178,15 +193,26 @@ pools: # required
         - my-cool-channel # at least 1 channel is required
 ```
 
+If you define a parameter in the Global section and in your pool, the value in the pool will be used.
+
+**Important Note:**
+
+If you are running Ghi in AWS your IRC nick _must_ be registered with an email and password. This is because Freenode requires all nicks connecting from AWS to be registered first to cut down on spam.
+
+
 ### Environment Variable
 
-text
-GH_CONFIG_PATH
-"GHI_GITHUB_SECRET_{}_{}".format(repoOwner,repoName)
-"GHI_IRC_PASSWORD_{}".format(name.upper())
-GHI_LONG_RESPONSE
-GHI_PORT
+Some parameters are able to be exported as environment variables instead of being set in the Ghi file. These are all possible environment variables you can use.
+
+| Name                               | Description                                              |
+|:---------------------------------- | --------------------------------------------------------:|
+| `GH_CONFIG_PATH`                   | Specify where the `.ghi.yml` file is.|
+| `GHI_GITHUB_SECRET_<OWNER>_<REPO>` | Secret used to validate GitHub payloads. `<OWNER>` is repo owner in all caps with special characters removed. `<REPO>` is repository name in all caps with special characters removed. |
+| `GHI_IRC_PASSWORD_<NAME>`          | Password for the IRC bot for a given pool. `<NAME>` is the name of the pool in the `.ghi.yml` file. |
+| `GHI_LONG_RESPONSE`                | Only used in AWS. Don't respond until the request is complete instead of replying right away. |
+| `GHI_PORT`                         | Only used in server. Specifies which port to listen on. |
 
 ### Supported Event Types
 
-text
+- [`push`](https://developer.github.com/v3/activity/events/types/#pushevent)
+- [`pull_request`](https://developer.github.com/v3/activity/events/types/#pullrequestevent)
