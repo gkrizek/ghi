@@ -6,8 +6,20 @@ from events.push import Push
 
 
 def getPool(payload, pools):
+
+    try:
+        payload = json.loads(payload)
+    except json.JSONDecodeError as e:
+        message = "There was a problem parsing payload: %s" % e
+        logging.error(message)
+        return {
+            "statusCode": 400,
+            "body": json.dumps({
+                "success": False,
+                "message": message
+            })
+        }
     ownerPool = None
-    payload = json.loads(payload)
     repo = payload["repository"]["full_name"]
 
     for pool in pools:
