@@ -106,7 +106,7 @@ def Push(payload, poolRepos, shorten):
         # First 3 individual commits
         num = 0
         for commit in commits:
-            if num > 3:
+            if num > 2:
                 break
             # If commit message is longer than 75 characters, truncate.
             commitMessage = commit["message"]
