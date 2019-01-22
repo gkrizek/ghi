@@ -88,8 +88,8 @@ Resources:
                 Ghi:
                     Type: Api
                     Properties:
-                        Path: /{proxy+}
-                        Method: post
+                        Path: /
+                        Method: ANY
 
 
     APIDomainName:

@@ -34,3 +34,5 @@ WantedBy=multi-user.target
 ```
 
 _You might need to create the log file first because the user might not have permissions to /var/log_
+
+With this Service file, you can also set your environment variables in the `/etc/default/ghi` file and they will be automatically exported on start.
