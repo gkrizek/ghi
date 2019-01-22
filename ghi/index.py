@@ -20,18 +20,10 @@ def handler(event, context=None):
             for handler in log.handlers:
                 log.removeHandler(handler)
 
-        if "X-Ghi-Server" in event["headers"]:
-            # was invoked by local server
-            logging.basicConfig(
-                level=logging.INFO,
-                format="%(asctime)s [ghi] %(message)s",
-                datefmt="%Y-%m-%d %H:%M:%S"
-            )
-        else:
-            logging.basicConfig(
-                level=logging.INFO,
-                format="%(message)s"
-            )
+        logging.basicConfig(
+            level=logging.INFO,
+            format="%(message)s"
+        )
 
         # By default ghi will respond to the request immediately,
         # then invoke itself to actually process the event.
@@ -62,8 +54,14 @@ def handler(event, context=None):
         logging.debug("Headers:")
         logging.debug(event["headers"])
 
+        # figure out which pool this should belong to so we can use its secret
+        pool = getPool(githubPayload, configuration["pools"])
+        if pool["statusCode"] != 200:
+            return pool
+
         try:
-            githubSignature = event["headers"]["X-Hub-Signature"]
+            if pool["verify"]:
+                githubSignature = event["headers"]["X-Hub-Signature"]
             try:
                 githubEvent = event["headers"]["X-GitHub-Event"]
             except KeyError as e:
@@ -78,11 +76,6 @@ def handler(event, context=None):
                     "message": errorMessage
                 })
             }
-
-        # figure out which pool this should belong to so we can use its secret
-        pool = getPool(githubPayload, configuration["pools"])
-        if pool["statusCode"] != 200:
-            return pool
 
         # check signatures of request
         if pool["verify"]:
