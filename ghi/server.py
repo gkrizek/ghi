@@ -64,12 +64,12 @@ def InvokeFunction(payload):
     
 
 def CreatePayload(method, path, body, headers):
-    # Create an payload that the index file will understand
+    # Create a payload that the index file will understand
     payload = {}
     payload["httpMethod"] = method
     payload["path"] = path
     payload["headers"] = headers
-    payload["body"] = json.dumps(body)
+    payload["body"] = body.decode("UTF-8")
     payload["uuid"] = str(uuid.uuid4())
     return payload
 
@@ -78,12 +78,7 @@ class MainHandler(tornado.web.RequestHandler):
     def post(self):
         # Parse Body
         if self.request.body:
-            try:
-                body = json.loads(self.request.body)
-            except json.JSONDecodeError as e:
-                self.set_status(400)
-                self.finish("Problem parsing body:\n%s" % e)
-                return
+            body = self.request.body
         else:
             self.set_status(400)
             self.finish("No body found")
