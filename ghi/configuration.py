@@ -132,75 +132,86 @@ def getConfiguration():
 
     # GLOBAL
     # validate and set global parameters
-    if "irc" in globalConfig:
-        if "host" in globalConfig["irc"]:
-            globalHost = globalConfig["irc"]["host"]
-            if type(globalHost) is not str:
-                raise TypeError("'host' is not a string")
+    try:
+        if "irc" in globalConfig:
+            if "host" in globalConfig["irc"]:
+                globalHost = globalConfig["irc"]["host"]
+                if type(globalHost) is not str:
+                    raise TypeError("'host' is not a string")
+            else:
+                globalHost = None
+            
+            if "port" in globalConfig["irc"]:
+                globalPort = globalConfig["irc"]["port"]
+                if type(globalPort) is not int:
+                    raise TypeError("'port' is not a integer")
+            else:
+                globalPort = None
+
+            if "ssl" in globalConfig["irc"]:
+                globalSsl = globalConfig["irc"]["ssl"]
+                if type(globalSsl) is not bool:
+                    raise TypeError("'ssl' is not a boolean")
+            else:
+                globalSsl = None
+
+            if "nick" in globalConfig["irc"]:
+                globalNick = globalConfig["irc"]["nick"]
+                if type(globalNick) is not str:
+                    raise TypeError("'nick' is not a string")
+            else:
+                globalNick = None
+
+            if "password" in globalConfig["irc"]:
+                globalPassword = globalConfig["irc"]["password"]
+                if type(globalPassword) is not str:
+                    raise TypeError("'password' is not a string")
+            else:
+                globalPassword = None
         else:
             globalHost = None
-        
-        if "port" in globalConfig["irc"]:
-            globalPort = globalConfig["irc"]["port"]
-            if type(globalPort) is not int:
-                raise TypeError("'port' is not a integer")
-        else:
             globalPort = None
-
-        if "ssl" in globalConfig["irc"]:
-            globalSsl = globalConfig["irc"]["ssl"]
-            if type(globalSsl) is not bool:
-                raise TypeError("'ssl' is not a boolean")
-        else:
             globalSsl = None
-
-        if "nick" in globalConfig["irc"]:
-            globalNick = globalConfig["irc"]["nick"]
-            if type(globalNick) is not int:
-                raise TypeError("'nick' is not a string")
-        else:
             globalNick = None
-
-        if "password" in globalConfig["irc"]:
-            globalPassword = globalConfig["irc"]["password"]
-            if type(globalPassword) is not int:
-                raise TypeError("'password' is not a string")
-        else:
             globalPassword = None
-    else:
-        globalHost = None
-        globalPort = None
-        globalSsl = None
-        globalNick = None
-        globalPassword = None
 
-    if "github" in globalConfig:
-        if "shorten_url" in globalConfig["github"]:
-            globalShorten = globalConfig["github"]["shorten_url"]
-            if type(globalShorten) is not bool:
-                raise TypeError("'shorten_url' is not a boolean")
+        if "github" in globalConfig:
+            if "shorten_url" in globalConfig["github"]:
+                globalShorten = globalConfig["github"]["shorten_url"]
+                if type(globalShorten) is not bool:
+                    raise TypeError("'shorten_url' is not a boolean")
+            else:
+                globalShorten = None
+            
+            if "verify" in globalConfig["github"]:
+                globalVerify = globalConfig["github"]["verify"]
+                if type(globalVerify) is not bool:
+                    raise TypeError("'verify' is not a boolean")
+            else:
+                globalVerify = None
         else:
             globalShorten = None
-        
-        if "verify" in globalConfig["github"]:
-            globalVerify = globalConfig["github"]["verify"]
-            if type(globalVerify) is not bool:
-                raise TypeError("'verify' is not a boolean")
-        else:
             globalVerify = None
-    else:
-        globalShorten = None
-        globalVerify = None
 
-    globalSettings = GlobalConfig(
-        host     = globalHost,
-        port     = globalPort,
-        ssl      = globalSsl,
-        nick     = globalNick,
-        password = globalPassword,
-        shorten  = globalShorten,
-        verify   = globalVerify
-    )
+        globalSettings = GlobalConfig(
+            host     = globalHost,
+            port     = globalPort,
+            ssl      = globalSsl,
+            nick     = globalNick,
+            password = globalPassword,
+            shorten  = globalShorten,
+            verify   = globalVerify
+        )
+    except (KeyError, TypeError) as e:
+        errorMessage = "Missing or invalid parameter in configuration file: %s" % e
+        logging.error(errorMessage)
+        return {
+            "statusCode": 500,
+            "body": json.dumps({
+                "success": False,
+                "message": errorMessage
+            })
+        }
 
     # POOLS
     # for each pool, validate and create a Pool object, append to array
