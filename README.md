@@ -13,7 +13,7 @@ Ghi was designed and written to be ran in [AWS Lambda](https://aws.amazon.com/la
 
 ### AWS Lambda
 
-Ghi was written to be ran in AWS Lambda and is the recommended deployment type. There are many ways to deploy Ghi to Lambda, I've found the simplest solution to be [SAM](https://aws.amazon.com/serverless/sam/). I've included several example SAM template in the [examples/SAM.md](examples/SAM.md) file. These can get you started running Ghi in Lambda quickly, but your own deployment method will work as well. If using your own process, be sure to create an API Gateway as well. During the build process be sure install the dependencies in the [`requirements.txt`](requirements.txt) file and add your `.ghi.yml` file. Below is the necessary information for running in Lambda:
+Ghi was written to be ran in AWS Lambda and is the recommended deployment type. There are many ways to deploy Ghi to Lambda, I've found the simplest solution to be [SAM](https://aws.amazon.com/serverless/sam/). I've included several example SAM template in the [examples/SAM.md](examples/SAM.md) file. These can get you started running Ghi in Lambda quickly, but your own deployment method will work as well. If using your own process, be sure to create an API Gateway as well. During the build process be sure install the dependencies in the [`requirements-aws.txt`](requirements-aws.txt) file and add your `.ghi.yml` file. Below is the necessary information for running in Lambda:
 
 - **runtime** - `python3.6`
 - **handler** - `index.handler`
@@ -22,12 +22,12 @@ Ghi was written to be ran in AWS Lambda and is the recommended deployment type. 
 
 ### Server
 
-Ghi comes with a minimal HTTP server that can be used to run Ghi on a server if desired. If you need more advanced HTTP functionality like SSL, Error handling, load balancing, etc, you should use something like Nginx as a reverse proxy. To deploy, you can simply clone this repository or add Ghi to your existing deployment workflow. Ensure that during deployment you also bundle/install the dependencies in the [`requirements.txt`](requirements.txt) file and add your `.ghi.yml` file.
+Ghi comes with a minimal HTTP server that can be used to run Ghi on a server if desired. If you need more advanced HTTP functionality like SSL, Error handling, load balancing, etc, you should use something like Nginx as a reverse proxy. To deploy, you can simply clone this repository or add Ghi to your existing deployment workflow. Ensure that during deployment you also bundle/install the dependencies in the [`requirements-server.txt`](requirements-server.txt) file and add your `.ghi.yml` file.
 
 ```
 $ git clone https://github.com/gkrizek/ghi.git
 $ cd ghi/
-$ pip3 install -r requirements.txt
+$ pip3 install -r requirements-server.txt
 ```
 
 ## Setting Configuration

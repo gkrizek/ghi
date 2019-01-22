@@ -1,4 +1,3 @@
-boto3
 PyYAML
 requests
 tornado
