@@ -101,13 +101,15 @@ If you are running Ghi in AWS your IRC nick _must_ be registered with an email a
 
 ### Server
 
-Once you have cloned or deployed Ghi to a server, you can run it by executing the [`ghi/server.py`](ghi/server.py) file. (Python 3 is required). This will start a web server listening on port `7890`. Ghi sends all logs to `stdout/stderr` so redirecting (`&>>`) to a log file is recommended. You can change the listener port with either the `--port` flag or the `GHI_PORT` environment variable. Because GitHub required webhooks to respond within 10 seconds, the Ghi web server executes the function then responds right away. 
+Once you have cloned or deployed Ghi to a server, you can run it by executing the [`ghi/server.py`](ghi/server.py) file. (Python 3 is required). This will start a web server listening on port `7890`. Ghi sends all logs to `stdout/stderr` so redirecting (`&>>`) to a log file is recommended. You can change the listener port with either the `--port` flag or the `GHI_PORT` environment variable. Because GitHub required webhooks to respond within 10 seconds, the Ghi web server executes the function then responds right away.
 
 **Example:**
 
 ```
 $ python3 ghi/server.py --port 8080
 ```
+
+_Make sure your `PYTHONPATH` is set to your Ghi project directory._
 
 I have [provided an example service file](examples/ghi.service.md) to use with systemd to make starting/stopping Ghi easier.
 
