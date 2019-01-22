@@ -7,6 +7,7 @@ from configuration import getConfiguration
 from github import getPool, parsePayload
 from irc import sendMessages
 from validation import validatePayload
+from __init__ import __version__
 
 
 def handler(event, context=None):
@@ -49,6 +50,8 @@ def handler(event, context=None):
         githubPayload = event["body"]
 
         # Enhanced logging if debug is set
+        logging.debug("Ghi Version:")
+        logging.debug(__version__)
         logging.debug("Payload:")
         logging.debug(githubPayload)
         logging.debug("Headers:")
