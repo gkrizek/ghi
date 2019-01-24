@@ -16,7 +16,6 @@ setup(
     author_email="graham@krizek.io",
     url="https://github.com/gkrizek/ghi",
     install_requires=[
-        "boto3",
         "PyYAML",
         "requests",
         "tornado"
