@@ -35,6 +35,7 @@ def GetArgs():
 
 
 def InvokeFunction(payload):
+    sys.path.append(os.path.dirname(os.path.realpath(__file__)))
     from index import handler
     return handler(payload)
     
@@ -143,7 +144,7 @@ def ShutDown(signum, frame):
     exit(0)
 
 
-if __name__ == "__main__":
+def main():
     try:
         # Handle logging ourselves
         logging.getLogger('tornado.access').disabled = True
@@ -155,3 +156,7 @@ if __name__ == "__main__":
         tornado.ioloop.IOLoop.current().start()
     except KeyboardInterrupt:
         ShutDown(None, None)
+
+
+if __name__ == "__main__":
+    main()
