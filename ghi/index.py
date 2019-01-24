@@ -21,10 +21,18 @@ def handler(event, context=None):
             for handler in log.handlers:
                 log.removeHandler(handler)
 
-        logging.basicConfig(
-            level=logging.INFO,
-            format="%(message)s"
-        )
+        if "X-Ghi-Server" in event["headers"]:
+            # was invoked by local server
+            logging.basicConfig(
+                level=logging.INFO,
+                format="%(asctime)s [ghi] %(message)s",
+                datefmt="%Y-%m-%d %H:%M:%S"
+            )
+        else:
+            logging.basicConfig(
+                level=logging.INFO,
+                format="%(message)s"
+            )
 
         # By default ghi will respond to the request immediately,
         # then invoke itself to actually process the event.
@@ -46,7 +54,7 @@ def handler(event, context=None):
         if configuration["debug"]:
             logging.getLogger().setLevel(logging.DEBUG)
 
-        # verify the request is from GtitHub
+        # verify the request is from GitHub
         githubPayload = event["body"]
 
         # Enhanced logging if debug is set
@@ -96,6 +104,8 @@ def handler(event, context=None):
                         "message": "payload validation failed"
                     })
                 }
+        else:
+            logging.debug("Skipping payload verification because 'verify' set to False.")
 
         getMessages = parsePayload(githubEvent, githubPayload, pool["pool"].repos, pool["pool"].shorten)
         if getMessages["statusCode"] != 200:

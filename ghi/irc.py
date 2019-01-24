@@ -125,7 +125,8 @@ def sendMessages(pool, messages):
         # Wait until connection is established
         while True:    
             text = irc.getText()
-            logging.debug(text)
+            for line in text.split('\r'):
+                logging.debug(line.rstrip())
             if re.search(r'(.*)00[1-4] '+pool.nick+'(.*)', text, re.MULTILINE):
                 break
             elif re.search(r'(.*)PING(.*)', text, re.MULTILINE):
