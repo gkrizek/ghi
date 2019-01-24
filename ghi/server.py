@@ -2,14 +2,13 @@ import argparse
 import json
 import logging
 import os
+import queue
 import signal
 import sys
+import threading
 import tornado.ioloop
 import tornado.web
 import uuid
-from index import handler
-from tornado.process import Subprocess
-from tornado import gen
 
 
 logging.basicConfig(
@@ -35,46 +34,66 @@ def GetArgs():
     }
 
 
-@gen.coroutine
 def InvokeFunction(payload):
-    python = sys.executable
-    if __file__.startswith('ghi'):
-        index = 'ghi.index'
-    else:
-        index = 'index'
-
-    command = (
-        "{python} -c '"
-        "from {index} import handler;print(handler({payload}))'"
-    ).format(
-        python=python,
-        index=index,
-        payload=json.dumps(payload)
-    )
-    process = Subprocess([command], stdout=Subprocess.STREAM, stderr=Subprocess.STREAM, shell=True)
-    response, logs = yield [process.stdout.read_until_close(),process.stderr.read_until_close()]
-    logging.info("Start UUID: %s" % payload["uuid"])
-    logging.info("Response:")
-    logging.info(response.decode("UTF-8").strip())
-    logging.info("Logs:")
-    for log in logs.decode("UTF-8").splitlines():
-        logging.info(log)
-    logging.info("Stop UUID: %s" % payload["uuid"])
-    logging.info("")
+    from index import handler
+    return handler(payload)
     
 
-def CreatePayload(method, path, body, headers):
+def CreatePayload(method, path, requesterIp, body, headers):
     # Create a payload that the index file will understand
     payload = {}
     payload["httpMethod"] = method
     payload["path"] = path
+    payload["requesterIp"] = requesterIp
     payload["headers"] = headers
     payload["body"] = body.decode("UTF-8")
     payload["uuid"] = str(uuid.uuid4())
     return payload
 
 
+class TaskQueue(queue.Queue):
+
+
+    def __init__(self, num_workers=1):
+        queue.Queue.__init__(self)
+        self.num_workers = num_workers
+        self.start_workers()
+
+
+    def add_task(self, task, *args, **kwargs):
+        args = args or ()
+        kwargs = kwargs or {}
+        self.put((task, args, kwargs))
+
+
+    def start_workers(self):
+        for each in range(self.num_workers):
+            thread = threading.Thread(target=self.worker)
+            thread.daemon = True
+            thread.start()
+
+
+    def worker(self):
+        while True:
+            item, args, kwargs = self.get()
+            logging.info("Start UUID: %s" % args[0]['uuid'])
+            logging.info("{} {} ({})".format(args[0]['httpMethod'], args[0]['path'], args[0]['requesterIp']))
+            response = item(*args, **kwargs)
+            logging.info("")
+            logging.info("Response:")
+            logging.info(response)
+            logging.info("Stop UUID: %s" % args[0]['uuid'])
+            logging.info("")
+            self.task_done()
+
+
 class MainHandler(tornado.web.RequestHandler):
+
+
+    def initialize(self, taskQueue):
+        self.taskQueue = taskQueue
+
+
     def post(self):
         # Parse Body
         if self.request.body:
@@ -93,16 +112,16 @@ class MainHandler(tornado.web.RequestHandler):
         payload = CreatePayload(
             method=self.request.method,
             path=self.request.path,
+            requesterIp=self.request.remote_ip,
             body=body,
             headers=headers
         )
 
-        logging.info("UUID: %s" % payload["uuid"])
-
-        InvokeFunction(payload)
+        self.taskQueue.add_task(InvokeFunction, payload)
 
         self.set_status(200)
         self.finish('{"success": true,"message":"Request received.","uuid":"%s"}' % payload["uuid"])
+
 
     def get(self):
         self.set_status(404)
@@ -110,8 +129,9 @@ class MainHandler(tornado.web.RequestHandler):
 
 
 def application():
+    taskQueue = TaskQueue()
     return tornado.web.Application([
-        (r"/.*", MainHandler),
+        (r"/.*", MainHandler, dict(taskQueue=taskQueue)),
     ])
 
 
@@ -125,6 +145,8 @@ def ShutDown(signum, frame):
 
 if __name__ == "__main__":
     try:
+        # Handle logging ourselves
+        logging.getLogger('tornado.access').disabled = True
         port = GetArgs()['port']
         app = application()
         app.listen(port)
