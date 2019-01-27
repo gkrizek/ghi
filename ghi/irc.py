@@ -59,8 +59,11 @@ class IRC(object):
             if tries > 20:
                 raise ConnectionError("Unable to connect to IRC: %s" % text) 
             ack = re.search(search, text, re.MULTILINE)
+            saslFailure = re.search(r'(.*)SASL authentication failed(.*)', text, re.MULTILINE)
             if ack:
                 return
+            elif saslFailure:
+                raise ConnectionError("Unable to connect to IRC: SASL Authentication Failure") 
             sleep(0.25)
             tries += 1
 
@@ -136,6 +139,8 @@ def sendMessages(pool, messages):
             elif re.search(r'(.*)ERROR :(.*)', text, re.MULTILINE):
                 raise ConnectionError(text)
             sleep(0.25)
+
+        logging.info("Connection Successful")
 
         for channel in pool.channels:
             for message in messages:
