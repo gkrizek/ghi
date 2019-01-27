@@ -110,6 +110,7 @@ def Push(payload, poolRepos, shorten):
                 break
             # If commit message is longer than 75 characters, truncate.
             commitMessage = commit["message"]
+            author = commit["author"]["name"]
             if len(commitMessage) > 75:
                 commitMessage = commitMessage[0:74] + "..."
 
@@ -118,7 +119,7 @@ def Push(payload, poolRepos, shorten):
                     repo         = repo,
                     branch       = branch,
                     shortCommit  = commit["id"][0:7],
-                    user         = user,
+                    user         = author,
                     message      = commitMessage,
                     light_gray   = colors.light_gray,
                     dark_gray    = colors.dark_gray,
