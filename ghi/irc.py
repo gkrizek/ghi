@@ -173,8 +173,8 @@ def sendMessages(pool, messages):
                 logging.debug(line.rstrip())
             if re.search(r'(.*)End of /NAMES list(.*)', text, re.MULTILINE):
                 break
-            elif sendTries > 90:
-                # If tried 90 times and no match, raise error
+            elif sendTries > 120:
+                # If tried 120 times and no match, raise error
                 raise ConnectionError("Timeout sending messages to IRC.")
             sleep(0.25)
             sendTries += 1
