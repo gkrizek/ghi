@@ -9,6 +9,7 @@ import threading
 import tornado.ioloop
 import tornado.web
 import uuid
+from time import sleep
 
 
 logging.basicConfig(
@@ -86,6 +87,7 @@ class TaskQueue(queue.Queue):
             logging.info("Stop UUID: %s" % args[0]['uuid'])
             logging.info("")
             self.task_done()
+            sleep(0.5)
 
 
 class MainHandler(tornado.web.RequestHandler):
