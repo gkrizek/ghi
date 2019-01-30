@@ -110,12 +110,19 @@ class IRC(object):
             self.irc.send(bytes("PART {}\r\n".format(channel), "UTF-8"))
         self.irc.send(bytes("QUIT\r\n", "UTF-8"))
         # Get rest of logs for debug
+        tries = 0
         while True:
             text = self.getText()
             logging.debug(text)
+            if tries > 20:
+                logging.info("Timeout waiting to quit IRC. Forcefully disconnecting now.")
+                break
             ack = re.search(r'(.*)QUIT :Client Quit(.*)', text, re.MULTILINE)
             if ack:
                 break
+            sleep(0.25)
+            tries += 1
+
         self.irc.close()
         logging.info("Disconnected from IRC")
         
