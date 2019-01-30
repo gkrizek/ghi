@@ -26,7 +26,7 @@ def PullRequest(payload, shorten):
             " {title} ({dark_purple}{baseBranch}{reset}...{dark_purple}{headBranch}{reset}) {blue}{underline}{url}{reset}\r\n"
         ).format(
             repo         = payload["pull_request"]["base"]["repo"]["name"],
-            user         = payload["pull_request"]["user"]["login"],
+            user         = payload["sender"]["login"],
             action       = action,
             number       = payload["number"],
             title        = payload["pull_request"]["title"],
