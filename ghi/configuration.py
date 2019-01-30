@@ -285,8 +285,10 @@ def getConfiguration():
                         raise TypeError("'branches' is not a list")
                     if len(branches) < 1:
                         raise TypeError("'branches' must contain at least 1 item")
+                    branches = [str(branch) for branch in branches]
                 else:
                     branches = None
+                
 
                 globalRepos.append(fullName)
                 generatedRepos.append({
