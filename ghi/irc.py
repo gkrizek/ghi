@@ -121,7 +121,7 @@ class IRC(object):
         while True:
             text = self.getText()
             logging.debug(text)
-            ack = re.search(r'(.*)QUIT :Client Quit(.*)', text, re.MULTILINE)
+            ack = re.search(r'(.*)ERROR :Closing Link(.*)', text, re.IGNORECASE | re.MULTILINE)
             if ack:
                 break
             elif tries > 15:
