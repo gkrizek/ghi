@@ -10,7 +10,7 @@ def InvokeSelf(event):
     functionName = os.getenv("AWS_LAMBDA_FUNCTION_NAME")
     event["headers"]["X-Ghi-Invoked"] = "true"
 
-    logging.info("Received intial invocation. Invoking self a second time.")
+    logging.info("Received initial invocation. Invoking self a second time.")
 
     invoke = awslambda.invoke(
         FunctionName=functionName,
@@ -23,7 +23,7 @@ def InvokeSelf(event):
             "statusCode": 200,
             "body": json.dumps({
                 "success": True,
-                "message": "Request recevied."
+                "message": "Request received."
             })
         }
     else:
