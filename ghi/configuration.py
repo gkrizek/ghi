@@ -83,7 +83,7 @@ def getConfiguration():
         logging.info("Found configuration file at '%s'" % configFilePath)
         config = yaml.load(readFile(configFilePath))
     except yaml.YAMLError as e:
-        logging.error("There was a problem parsing configuation file.")
+        logging.error("There was a problem parsing configuration file.")
         logging.error(e)
         return {
             "statusCode": 500,
