@@ -49,7 +49,7 @@ class IRC(object):
 
     def getText(self):
         try:
-            text = self.irc.recv()
+            text = self.irc.recv(4096)
             return text.decode("UTF-8")
         except socket.timeout:
             return "waiting for messages..."
