@@ -85,7 +85,7 @@ class IRC(object):
             password=password
         )
         auth = base64.encodestring(auth.encode("UTF-8"))
-        auth = auth.decode("UTF-8").rstrip("\n")
+        auth = auth.decode("UTF-8").replace("\n", "")
         self.irc.send(bytes("AUTHENTICATE "+auth+"\r\n", "UTF-8"))
         self.waitAndSee(r'(.*)903(.*):SASL authentication successful(.*)')
         self.irc.send(bytes("CAP END\r\n", "UTF-8"))
