@@ -81,7 +81,8 @@ def parsePayload(event, payload, repos, shorten):
 
         return {
             "statusCode": 200,
-            "messages": push["messages"]
+            "ircMessages": push["ircMessages"],
+            "mastMessages": push["mastMessages"]
         }
 
 
@@ -93,7 +94,8 @@ def parsePayload(event, payload, repos, shorten):
 
         return {
             "statusCode": 200,
-            "messages": pullRequest["messages"]
+            "ircMessages": pullRequest["ircMessages"],
+            "mastMessages": pullRequest["mastMessages"]
         }
 
 

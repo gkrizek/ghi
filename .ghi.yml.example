@@ -11,3 +11,13 @@ pools:
       password: myBotPassword123!
       channels:
         - channel1
+    mastodon:
+      instance: https://mstdn.social
+      user: happy@place.net
+      password: myBotPassword123!
+      secretspath: /home/thatsme/my/secrets/
+      appname: my-mastodon-bot
+      merges_only: True
+    outlets:
+      - irc
+      - mastodon

@@ -21,7 +21,7 @@ def PullRequest(payload, shorten):
         if action == "closed" and payload["pull_request"]["merged"]:
             action = "merged"
 
-        message = (
+        ircMessage = (
             "[{light_purple}{repo}{reset}] {gray}{user}{reset} {bold}{action}{reset} pull request {bold}#{number}{reset}:"
             " {title} ({dark_purple}{baseBranch}{reset}...{dark_purple}{headBranch}{reset}) {blue}{underline}{url}{reset}\r\n"
         ).format(
@@ -43,9 +43,20 @@ def PullRequest(payload, shorten):
             reset        = colors.reset
         )
 
+        mastMessage = (
+                "[{repo}] {action} PR from {user}: {title} {url}"
+        ).format(
+            repo   = payload["pull_request"]["base"]["repo"]["name"],
+            action = action.capitalize(),
+            user   = payload["pull_request"]["user"]["login"],
+            title  = payload["pull_request"]["title"],
+            url    = url
+        )
+
         return {
             "statusCode": 200,
-            "messages": [message]
+            "ircMessages": [ircMessage],
+            "mastMessages": [mastMessage]
         }
 
     else:

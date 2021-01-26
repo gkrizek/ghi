@@ -59,7 +59,7 @@ class IRC(object):
         tries = 0
         while True:
             text = self.getText()
-            logging.debug(text)
+            logging.debug("IRC - " + text)
             ack = re.search(search, text, re.MULTILINE)
             saslFailure = re.search(r'(.*)SASL authentication failed(.*)', text, re.MULTILINE)
             if ack:
@@ -100,7 +100,7 @@ class IRC(object):
 
 
     def connect(self, host, port, channels, nick, password):
-        logging.info("Connecting to {}:{} with nick {} and channels: {}".format(host, port, nick, ','.join(channels)))
+        logging.info("IRC - Connecting to {}:{} with nick {} and channels: {}".format(host, port, nick, ','.join(channels)))
         self.irc.connect((host, port))  
         if password != None:
             self.authenticate(nick, password)                                                  
@@ -120,24 +120,24 @@ class IRC(object):
         tries = 0
         while True:
             text = self.getText()
-            logging.debug(text)
+            logging.debug("IRC - " + text)
             ack = re.search(r'(.*)ERROR :Closing Link(.*)', text, re.IGNORECASE | re.MULTILINE)
             if ack:
                 break
             elif tries > 15:
-                logging.info("Timeout waiting to quit IRC. Forcefully disconnecting now.")
+                logging.info("IRC - Timeout waiting to quit IRC. Forcefully disconnecting now.")
                 break
             sleep(0.25)
             tries += 1
 
         self.irc.close()
-        logging.info("Disconnected from IRC")
-        
+        logging.info("IRC - Disconnected from IRC")
+
 
 def sendMessages(pool, messages):
     try:
-        irc = IRC(pool.ssl)
-        irc.connect(pool.host, pool.port, pool.channels, pool.nick, pool.password)
+        irc = IRC(pool.ircSsl)
+        irc.connect(pool.ircHost, pool.ircPort, pool.ircChannels, pool.ircNick, pool.ircPassword)
         
         # Wait until connection is established
         connectionTries = 0
@@ -145,7 +145,7 @@ def sendMessages(pool, messages):
             text = irc.getText()
             for line in text.split('\r'):
                 logging.debug(line.rstrip())
-            if re.search(r'(.*)00[1-4] '+pool.nick+'(.*)', text, re.MULTILINE):
+            if re.search(r'(.*)00[1-4] '+pool.ircNick+'(.*)', text, re.MULTILINE):
                 break
             elif re.search(r'(.*)PING(.*)', text, re.MULTILINE):
                 irc.sendPong(text)
@@ -159,9 +159,9 @@ def sendMessages(pool, messages):
             sleep(0.25)
             connectionTries += 1
 
-        logging.info("Connection Successful")
+        logging.info("IRC - Connection Successful")
 
-        for channel in pool.channels:
+        for channel in pool.ircChannels:
             for message in messages:
                 irc.sendMessage(channel, message)
 
@@ -179,9 +179,13 @@ def sendMessages(pool, messages):
             sleep(0.25)
             sendTries += 1
 
-        irc.disconnect(pool.channels)
+        irc.disconnect(pool.ircChannels)
 
-        resultMessage = "Successfully sent {} messages.".format(len(messages))
+        if len(messages) == 1:
+            resultMessage = "IRC - Successfully sent 1 message."
+        else:
+            resultMessage = "IRC - Successfully sent {} messages.".format(len(messages))
+
         logging.info(resultMessage)
         return {
             "statusCode": 200,
@@ -192,9 +196,9 @@ def sendMessages(pool, messages):
         }
 
     except Exception as e:
-        errorMessage = "There was a problem sending messages to IRC"
+        errorMessage = "IRC - There was a problem sending messages to IRC"
         logging.error(errorMessage)
-        logging.error(e)
+        logging.error("IRC - " + str(e))
         return {
             "statusCode": 500,
             "body": json.dumps({

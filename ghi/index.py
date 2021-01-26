@@ -6,6 +6,7 @@ import logging
 from configuration import getConfiguration
 from github import getPool, parsePayload
 from irc import sendMessages
+from ghimastodon import sendToots
 from validation import validatePayload
 from __init__ import __version__
 
@@ -111,24 +112,82 @@ def handler(event, context=None):
         if getMessages["statusCode"] != 200:
             return getMessages
 
-        logging.debug("Messages:")
-        logging.debug(getMessages["messages"])
+        ircCheck = False
+        mastCheck = False
+        failure = False
         
-        # Send messages to the designated IRC channel(s)
-        sendToIrc = sendMessages(pool["pool"], getMessages["messages"])
-        if sendToIrc["statusCode"] != 200:
-            return sendToIrc
+        if "irc" in pool["pool"].outlets:
+            logging.debug("IRC Messages:")
+            logging.debug(getMessages["ircMessages"])
 
-        result = "Successfully notified IRC."
-        logging.info(result)
-        return {
-            "statusCode": 200,
-            "body": json.dumps({
-                "success": True,
-                "message": result
-            })
+            # Send messages to the designated IRC channel(s)
+            sendToIrc = sendMessages(pool["pool"], getMessages["ircMessages"])
+            if sendToIrc["statusCode"] != 200:
+                failure = True
+                ircResult = "Something went wrong while trying to notify IRC."
+            else:
+                ircResult = "Successfully notified IRC."
+                ircCheck = True
+            logging.info(ircResult)
+            
 
-        }
+        githubPayload = json.loads(githubPayload)
+
+        if githubEvent == "pull_request":
+            if not (githubPayload["action"] == "closed" and githubPayload["pull_request"]["merged"]):
+                mastAppliedMergeFilter = pool["pool"].mastMergeFilter
+            else:
+                mastAppliedMergeFilter = False
+        else:
+            mastAppliedMergeFilter = pool["pool"].mastMergeFilter
+
+        if "mastodon" in pool["pool"].outlets and not mastAppliedMergeFilter:
+            logging.debug("Mastodon Messages:")
+            logging.debug(getMessages["mastMessages"])
+
+            # Send messages to Mastodon's instance's user's timeline
+            sendToMastodon = sendToots(pool["pool"], getMessages["mastMessages"])
+            if sendToMastodon["statusCode"] != 200:
+                failure = True
+                mastResult = "Something went wrong while trying to notify Mastodon."
+            else:
+                mastResult = "Succesfully notified Mastodon."
+                mastCheck = True
+            logging.info(mastResult)
+            
+        if ircCheck or not mastAppliedMergeFilter and not failure:
+            result = "Succesfully notified {both0}{IRC}{both1}{Mastodon}.".format(
+                both0    = "both " if ircCheck and mastCheck else "",
+                both1    = " and " if ircCheck and mastCheck else "",
+                IRC      = "IRC" if ircCheck else "",
+                Mastodon = "Mastodon" if mastCheck else ""
+            )
+            if "mastodon" in pool["pool"].outlets and mastAppliedMergeFilter:
+                mastResult = "Didn't toot because of the merge filter."
+                logging.info(mastResult)
+                result = result[:-1] + ", but not Mastodon because of the merge filter."    
+        elif "mastodon" in pool["pool"].outlets and mastAppliedMergeFilter:
+            mastResult = "Event received, but didn't toot because of the merge filter."
+            logging.info(mastResult)
+            result = "Event received, but didn't toot because of the merge filter."
+
+        if failure:
+            result = "Something went wrong."
+            return {
+                "statusCode": 500,
+                "body": json.dumps({
+                    "success": False,
+                    "message": result
+                })
+            }
+        else:        
+            return {
+                "statusCode": 200,
+                "body": json.dumps({
+                    "success": True,
+                    "message": result
+                })
+            }
 
     else:
         return {
