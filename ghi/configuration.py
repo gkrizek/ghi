@@ -3,20 +3,29 @@ import logging
 import os
 import yaml
 
+SUPPORTED_OUTLETS = ["irc", "mastodon"]
 
 class Pool(object):
 
 
-    def __init__(self, name, repos, shorten, host, port, ssl, nick, password, channels):
+    def __init__(self, name, outlets, repos, shorten, ircHost, ircPort, ircSsl, ircNick, ircPassword, ircChannels,\
+                 mastInstance, mastUser, mastPassword, mastSecPath, mastAppName, mastMergeFilter):
         self.name = name
+        self.outlets = outlets
         self.repos = repos
         self.shorten = shorten
-        self.host = host
-        self.port = port
-        self.ssl = ssl
-        self.nick = nick
-        self.password = password
-        self.channels = channels
+        self.ircHost = ircHost
+        self.ircPort = ircPort
+        self.ircSsl = ircSsl
+        self.ircNick = ircNick
+        self.ircPassword = ircPassword
+        self.ircChannels = ircChannels
+        self.mastInstance = mastInstance
+        self.mastUser = mastUser
+        self.mastPassword = mastPassword
+        self.mastSecPath = mastSecPath
+        self.mastAppName = mastAppName
+        self.mastMergeFilter = mastMergeFilter
 
 
     def containsRepo(self, repo):
@@ -34,14 +43,22 @@ def readFile(path):
 class GlobalConfig(object):
 
 
-    def __init__(self, host, port, ssl, nick, password, shorten, verify):
-        self.host = host
-        self.port = port
-        self.ssl = ssl
-        self.nick = nick
-        self.password = password
+    def __init__(self, ircHost, ircPort, ircSsl, ircNick, ircPassword, mastInstance, mastUser,\
+                 mastPassword, mastSecPath, mastAppName, mastMergeFilter, shorten, verify, outlets):
+        self.ircHost = ircHost
+        self.ircPort = ircPort
+        self.ircSsl = ircSsl
+        self.ircNick = ircNick
+        self.ircPassword = ircPassword
+        self.mastInstance = mastInstance
+        self.mastUser = mastUser
+        self.mastPassword = mastPassword
+        self.mastSecPath = mastSecPath
+        self.mastAppName = mastAppName
+        self.mastMergeFilter = mastMergeFilter
         self.shorten = shorten
         self.verify = verify
+        self.outlets = outlets
 
 
 def getConfiguration():
@@ -135,45 +152,95 @@ def getConfiguration():
     try:
         if "irc" in globalConfig:
             if "host" in globalConfig["irc"]:
-                globalHost = globalConfig["irc"]["host"]
-                if type(globalHost) is not str:
+                globalIrcHost = globalConfig["irc"]["host"]
+                if type(globalIrcHost) is not str:
                     raise TypeError("'host' is not a string")
             else:
-                globalHost = None
+                globalIrcHost = None
             
             if "port" in globalConfig["irc"]:
-                globalPort = globalConfig["irc"]["port"]
-                if type(globalPort) is not int:
+                globalIrcPort = globalConfig["irc"]["port"]
+                if type(globalIrcPort) is not int:
                     raise TypeError("'port' is not a integer")
             else:
-                globalPort = None
+                globalIrcPort = None
 
             if "ssl" in globalConfig["irc"]:
-                globalSsl = globalConfig["irc"]["ssl"]
-                if type(globalSsl) is not bool:
+                globalIrcSsl = globalConfig["irc"]["ssl"]
+                if type(globalIrcSsl) is not bool:
                     raise TypeError("'ssl' is not a boolean")
             else:
-                globalSsl = None
+                globalIrcSsl = None
 
             if "nick" in globalConfig["irc"]:
-                globalNick = globalConfig["irc"]["nick"]
-                if type(globalNick) is not str:
+                globalIrcNick = globalConfig["irc"]["nick"]
+                if type(globalIrcNick) is not str:
                     raise TypeError("'nick' is not a string")
             else:
-                globalNick = None
+                globalIrcNick = None
 
             if "password" in globalConfig["irc"]:
-                globalPassword = globalConfig["irc"]["password"]
-                if type(globalPassword) is not str:
+                globalIrcPassword = globalConfig["irc"]["password"]
+                if type(globalIrcPassword) is not str:
                     raise TypeError("'password' is not a string")
             else:
-                globalPassword = None
+                globalIrcPassword = None
         else:
-            globalHost = None
-            globalPort = None
-            globalSsl = None
-            globalNick = None
-            globalPassword = None
+            globalIrcHost = None
+            globalIrcPort = None
+            globalIrcSsl = None
+            globalIrcNick = None
+            globalIrcPassword = None
+
+        if "mastodon" in globalConfig:
+            if "instance" in globalConfig["mastodon"]:
+                globalMastInstance = globalConfig["mastodon"]["instance"]
+                if type(globalMastInstance) is not str:
+                    raise TypeError("'instance' is not a string")
+            else:
+                globalMastInstance = None
+
+            if "user" in globalConfig["mastodon"]:
+                globalMastUser = globalConfig["mastodon"]["user"]
+                if type(globalMastUser) is not str:
+                    raise TypeError("'user' is not a string")
+            else:
+                globalMastUser = None
+
+            if "password" in globalConfig["mastodon"]:
+                globalMastPassword = globalConfig["mastodon"]["password"]
+                if type(globalMastPassword) is not str:
+                    raise TypeError("'password' is not a string")
+            else:
+                globalMastPassword = None
+
+            if "secretspath" in globalConfig["mastodon"]:
+                globalMastSecPath = globalConfig["mastodon"]["secretspath"]
+                if type(globalMastSecPath) is not str:
+                    raise TypeError("'secretspath' is not a string")
+            else:
+                globalMastSecPath = None
+
+            if "appname" in globalConfig["mastodon"]:
+                globalMastAppName = globalConfig["mastodon"]["appname"]
+                if type(globalMastAppName) is not str:
+                    raise TypeError("'appname' is not a string")
+            else:
+                globalMastAppName = None
+
+            if "merges_only" in globalConfig["mastodon"]:
+                globalMastMergeFilter = globalConfig["mastodon"]["merges_only"]
+                if type(globalMastMergeFilter) is not bool:
+                    raise TypeError("'merges_only' is not a boolean")
+            else:
+                globalMastMergeFilter = None
+        else:
+            globalMastInstance = None
+            globalMastUser = None
+            globalMastPassword = None
+            globalMastSecPath = None
+            globalMastAppName = None
+            globalMastMergeFilter = None
 
         if "github" in globalConfig:
             if "shorten_url" in globalConfig["github"]:
@@ -193,14 +260,41 @@ def getConfiguration():
             globalShorten = None
             globalVerify = None
 
+
+        if "outlets" in globalConfig:
+            outlets = globalConfig["outlets"]
+            if type(outlets) is not list:
+                raise TypeError("'outlets' is not a list")
+            if len(outlets) <1:
+                raise TypeError("'outlets' must contain at least 1 item")
+        else:
+            outlets = None
+
+        globalGeneratedOutlets = []
+        if outlets != None:
+            for outlet in outlets:
+                if outlet in SUPPORTED_OUTLETS:
+                    globalGeneratedOutlets.append(outlet)
+                else:
+                    raise ValueError("'{entry}' is not supported.".format(entry=outlet))
+        else:
+            globalGeneratedOutlets = None
+
         globalSettings = GlobalConfig(
-            host     = globalHost,
-            port     = globalPort,
-            ssl      = globalSsl,
-            nick     = globalNick,
-            password = globalPassword,
-            shorten  = globalShorten,
-            verify   = globalVerify
+            ircHost         = globalIrcHost,
+            ircPort         = globalIrcPort,
+            ircSsl          = globalIrcSsl,
+            ircNick         = globalIrcNick,
+            ircPassword     = globalIrcPassword,
+            mastInstance    = globalMastInstance,
+            mastUser        = globalMastUser,
+            mastPassword    = globalMastPassword,
+            mastSecPath     = globalMastSecPath,
+            mastAppName     = globalMastAppName,
+            mastMergeFilter = globalMastMergeFilter,
+            shorten         = globalShorten,
+            verify          = globalVerify,
+            outlets         = globalGeneratedOutlets
         )
     except (KeyError, TypeError) as e:
         errorMessage = "Missing or invalid parameter in configuration file: %s" % e
@@ -223,6 +317,28 @@ def getConfiguration():
             name = pool["name"]
             if type(name) is not str:
                 raise TypeError("'name' is not a string")
+
+
+            if "outlets" in pool:
+                outlets = pool["outlets"]
+                if type(outlets) is not list:
+                    raise TypeError("'outlets' is not a list")
+                if len(outlets) <1:
+                    raise TypeError("'outlets' must contain at least 1 item")
+            else:
+                outlets = None
+
+            generatedOutlets = []
+            if outlets != None:
+                for outlet in outlets:
+                    if outlet in SUPPORTED_OUTLETS:
+                        generatedOutlets.append(outlet)
+                    else:
+                        raise ValueError("'{entry}' is not supported.".format(entry=outlet))
+            elif globalSettings.outlets:
+                generatedOutlets = globalSettings.outlets
+            else:
+                generatedOutlets = ["irc"]
 
 
             repos = pool["github"]["repos"]
@@ -299,73 +415,165 @@ def getConfiguration():
                 })
 
 
-            if "host" in pool["irc"]:
-                host = pool["irc"]["host"]
-            elif globalSettings.host:
-                host = globalSettings.host
-            else:
-                raise KeyError("host")
-            if type(host) is not str:
-                raise TypeError("'host' is not a string")
-
-
-            if "ssl" in pool["irc"]:
-                ssl = pool["irc"]["ssl"]
-            elif globalSettings.ssl:
-                ssl = globalSettings.ssl
-            else:
-                ssl = True
-            if type(ssl) is not bool:
-                raise TypeError("'ssl' is not a boolean")
-
-
-            if "port" in pool["irc"]:
-                port = pool["irc"]["port"]
-            elif globalSettings.port:
-                port = globalSettings.port
-            elif ssl is True:
-                port = 6697
-            else:
-                port = 6667
-            if type(port) is not int:
-                raise TypeError("'port' is not an integer")
-
-
-            if "nick" in pool["irc"]:
-                nick = pool["irc"]["nick"]
-            elif globalSettings.nick:
-                nick = globalSettings.nick
-            else:
-                raise KeyError("nick")
-            if type(nick) is not str:
-                raise TypeError("'nick' is not a string")
-
-            envName = name.upper()
-            envName = ''.join(l for l in envName if l.isalnum())
-            if "GHI_IRC_PASSWORD_{}".format(envName) in os.environ:
-                password = os.environ["GHI_IRC_PASSWORD_{}".format(envName)]
-            elif "password" in pool["irc"]:
-                password = pool["irc"]["password"]
-            elif globalSettings.password:
-                password = globalSettings.password
-            else:
-                password = None
-            if password and type(password) is not str:
-                raise TypeError("'password' is not a string")
-
-
-            channels = pool["irc"]["channels"]
-            if type(channels) is not list:
-                raise TypeError("'channels' is not a list")
-            if len(channels) < 1:
-                raise TypeError("'channels' must contain at least 1 item")
-
-            generatedChannels = []
-            for channel in channels:
-                if channel.startswith("#"):
-                    generatedChannels.append(channel)
+            if "irc" in generatedOutlets:
+                if "host" in pool["irc"]:
+                    ircHost = pool["irc"]["host"]
+                elif globalSettings.ircHost:
+                    ircHost = globalSettings.ircHost
                 else:
-                    generatedChannels.append("#"+channel)
+                    raise KeyError("host")
+                if type(ircHost) is not str:
+                    raise TypeError("'host' is not a string")
+
+
+                if "ssl" in pool["irc"]:
+                    ircSsl = pool["irc"]["ssl"]
+                elif globalSettings.ircSsl:
+                    ircSsl = globalSettings.ircSsl
+                else:
+                    ircSsl = True
+                if type(ircSsl) is not bool:
+                    raise TypeError("'ssl' is not a boolean")
+
+
+                if "port" in pool["irc"]:
+                    ircPort = pool["irc"]["port"]
+                elif globalSettings.ircPort:
+                    ircPort = globalSettings.ircPort
+                elif ircSsl is True:
+                    ircPort = 6697
+                else:
+                    ircPort = 6667
+                if type(ircPort) is not int:
+                    raise TypeError("'port' is not an integer")
+
+
+                if "nick" in pool["irc"]:
+                    ircNick = pool["irc"]["nick"]
+                elif globalSettings.ircNick:
+                    ircNick = globalSettings.ircNick
+                else:
+                    raise KeyError("nick")
+                if type(ircNick) is not str:
+                    raise TypeError("'nick' is not a string")
+
+                envName = name.upper()
+                envName = ''.join(l for l in envName if l.isalnum())
+                if "GHI_IRC_PASSWORD_{}".format(envName) in os.environ:
+                    ircPassword = os.environ["GHI_IRC_PASSWORD_{}".format(envName)]
+                elif "password" in pool["irc"]:
+                    ircPassword = pool["irc"]["password"]
+                elif globalSettings.ircPassword:
+                    ircPassword = globalSettings.ircPassword
+                else:
+                    ircPassword = None
+                if ircPassword and type(ircPassword) is not str:
+                    raise TypeError("'password' is not a string")
+
+
+                ircChannels = pool["irc"]["channels"]
+                if type(ircChannels) is not list:
+                    raise TypeError("'channels' is not a list")
+                if len(ircChannels) < 1:
+                    raise TypeError("'channels' must contain at least 1 item")
+
+                generatedIrcChannels = []
+                for channel in ircChannels:
+                    if channel.startswith("#"):
+                        generatedIrcChannels.append(channel)
+                    else:
+                        generatedIrcChannels.append("#"+channel)
+
+            if "mastodon" in generatedOutlets and "mastodon" in pool:
+                if "instance" in pool["mastodon"]:
+                    mastInstance = pool["mastodon"]["instance"]
+                elif globalSettings.mastInstance:
+                    mastInstance = globalSettings.mastInstance
+                else:
+                    raise KeyError("instance")
+                if type(mastInstance) is not str:
+                    raise TypeError("'instance' is not a string")
+
+
+                if "user" in pool["mastodon"]:
+                    mastUser = pool["mastodon"]["user"]
+                elif globalSettings.mastUser:
+                    mastUser = globalSettings.mastUser
+                else:
+                    raise KeyError("user")
+                if type(mastUser) is not str:
+                    raise TypeError("'user' is not a string")
+
+
+                if "password" in pool["mastodon"]:
+                    mastPassword = pool["mastodon"]["password"]
+                elif globalSettings.mastPassword:
+                    mastPassword = globalSettings.mastPassword
+                else:
+                    raise KeyError("password")
+                if type(mastPassword) is not str:
+                    raise TypeError("'password' is not a string")
+
+
+                if "secretspath" in pool["mastodon"]:
+                    mastSecPath = pool["mastodon"]["secretspath"]
+                elif globalSettings.mastSecPath:
+                    mastSecPath = globalSettings.mastSecPath
+                else:
+                    raise KeyError("secretspath")
+                if type(mastSecPath) is not str:
+                    raise TypeError("'secretspath' is not a string")
+
+
+                if "appname" in pool["mastodon"]:
+                    mastAppName = pool["mastodon"]["appname"]
+                elif globalSettings.mastAppName:
+                    mastAppName = globalSettings.mastAppName
+                else:
+                    raise KeyError("appname")
+                if type(mastAppName) is not str:
+                    raise TypeError("'appname' is not a string")
+
+
+                if "merges_only" in pool["mastodon"]:
+                    mastMergeFilter = pool["mastodon"]["merges_only"]
+                elif globalSettings.mastMergeFilter:
+                    mastMergeFilter = globalSettings.mastMergeFilter
+                else:
+                    mastMergeFilter = True
+                if type(mastMergeFilter) is not bool:
+                    raise TypeError("'merges_only' is not a boolean")
+
+            elif "mastodon" in generatedOutlets and "mastodon" in globalConfig:
+                if globalSettings.mastInstance:
+                    mastInstance = globalSettings.mastInstance
+                else:
+                    raise KeyError("instance")
+
+                if globalSettings.mastUser:
+                    mastUser = globalSettings.mastUser
+                else:
+                    raise KeyError("user")
+
+                if globalSettings.mastPassword:
+                    mastPassword = globalSettings.mastPassword
+                else:
+                    raise KeyError("password")
+
+                if globalSettings.mastSecPath:
+                    mastSecPath = globalSettings.mastSecPath
+                else:
+                    raise KeyError("secretspath")
+
+                if globalSettings.mastAppName:
+                    mastAppName = globalSettings.mastAppName
+                else:
+                    raise KeyError("appname")
+
+                if globalSettings.mastMergeFilter:
+                    mastMergeFilter = globalSettings.mastMergeFilter
+                else:
+                    mastMergeFilter = True
 
         except (KeyError, TypeError) as e:
             errorMessage = "Missing or invalid parameter in configuration file: %s" % e
@@ -377,17 +585,41 @@ def getConfiguration():
                     "message": errorMessage
                 })
             }
+
+        if "irc" not in generatedOutlets:
+            ircHost = None
+            ircPort = None
+            ircSsl = None
+            ircNick = None
+            ircPassword = None
+            generatedIrcChannels = None
+
+        if "mastodon" not in generatedOutlets:
+            mastInstance = None
+            mastUser = None
+            mastPassword = None
+            mastSecPath = None
+            mastAppName = None
+            mastMergeFilter = None
+
         pools.append(
             Pool(
                 name=name,
+                outlets=generatedOutlets,
                 repos=generatedRepos,
                 shorten=shorten,
-                host=host,
-                port=port,
-                ssl=ssl,
-                nick=nick,
-                password=password,
-                channels=generatedChannels
+                ircHost=ircHost,
+                ircPort=ircPort,
+                ircSsl=ircSsl,
+                ircNick=ircNick,
+                ircPassword=ircPassword,
+                ircChannels=generatedIrcChannels,
+                mastInstance=mastInstance,
+                mastUser=mastUser,
+                mastPassword=mastPassword,
+                mastSecPath=mastSecPath,
+                mastAppName=mastAppName,
+                mastMergeFilter=mastMergeFilter
             )
         )
 

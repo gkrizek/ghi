@@ -2,12 +2,12 @@
 
 **G**it**H**ub **I**RC Notification Service
 
-Ghi (pronounced 'ghee') is a relay between GitHub and IRC. It was created to take the place of the [now depreciated](https://developer.github.com/changes/2018-04-25-github-services-deprecation/) [GitHub IRC Service](https://github.com/github/github-services/blob/master/lib/services/irc.rb). Ghi receives events from GitHub for a specified repository via a webhook. Then it parses the event and sends the relevant information to your configured IRC channels. Ghi was written to be very configuration driven. Therefore, Ghi is set up with a `.ghi.yml` file and can listen for multiple repositories and send to multiple channels. Most of the features in the original GitHub Service are supported in Ghi as well.
+Ghi (pronounced 'ghee') is a relay between GitHub and IRC and/or Mastodon. It was created to take the place of the [now depreciated](https://developer.github.com/changes/2018-04-25-github-services-deprecation/) [GitHub IRC Service](https://github.com/github/github-services/blob/master/lib/services/irc.rb). Ghi receives events from GitHub for a specified repository via a webhook. Then it parses the event and sends the relevant information to your configured IRC channels and/or Mastodon timeline. Ghi was written to be very configuration driven. Therefore, Ghi is set up with a `.ghi.yml` file and can listen for multiple repositories and send to multiple IRC channels. Most of the features in the original GitHub Service are supported in Ghi as well.
 
 
 # Getting Started
 
-Ghi was designed and written to be ran in [AWS Lambda](https://aws.amazon.com/lambda/) with [API Gateway](https://aws.amazon.com/api-gateway/). However, I've also created a very simple HTTP server implementation so Ghi can be ran on any server if desired. Ghi is configured entirely with the `.ghi.yml` file. In this file you will set all necessary information including repositories, IRC nick, IRC host, channels, etc.
+Ghi was designed and written to be ran in [AWS Lambda](https://aws.amazon.com/lambda/) with [API Gateway](https://aws.amazon.com/api-gateway/). However, I've also created a very simple HTTP server implementation so Ghi can be ran on any server if desired. Ghi is configured entirely with the `.ghi.yml` file. In this file you will set all necessary information including repositories, IRC nick, IRC host, channels, Mastodon instance, Mastodon user, etc.
 
 ## Deployment
 
@@ -28,6 +28,14 @@ Ghi comes with a minimal HTTP server that can be used to run Ghi on a server if 
 $ git clone https://github.com/gkrizek/ghi.git
 $ cd ghi/
 $ pip3 install -r requirements-server.txt
+```
+
+### Mastodon
+
+Ghi supports pushing messages to Mastodon. Since Ghi, as the name implies, is mainly focused on IRC the module requirement for Mastodon is optional. If you want to use Mastodon as one of the outlets the Mastodon.py module is required:
+
+```
+$ pip3 install mastodon-py
 ```
 
 ## Setting Configuration
@@ -69,6 +77,15 @@ pools:
       nick: my-irc-bot
       channels:
         - my-cool-channel
+    mastodon:
+      instance: https://mstdn.social
+      user: happy@place.net
+      password: myBotPassword123!
+      secretspath: /home/thatsme/my/secrets/
+      appname: my-mastodon-bot
+    outlets:
+      - irc
+      - mastodon      
 ```
 
 _More Ghi file examples in [`examples/.ghi.yml.md`](examples/.ghi.yml.md)._
@@ -130,29 +147,45 @@ Ghi is configurable and supports lots of combinations of repositories, channels,
 
 **Global Configuration Object**
 
-| Name               | Default                                   | Required | Description                                          |
-|:------------------ |:-----------------------------------------:|:--------:| ----------------------------------------------------:|
-| github:shorten_url | False                                     | No       | Shorten all GitHub links with git.io                 |
-| github:verify      | True                                      | No       | Verify the payload with the `X-Hub-Signature` header |
-| irc:host           | None                                      | No       | Hostname for IRC Server                              |
-| irc:port           | 6697 if SSL enabled, 6667 if SSL disabled | No       | Port for IRC Server                                  |
-| irc:ssl            | True                                      | No       | Connect to IRC Server with SSL                       |
-| irc:nick           | None                                      | No       | IRC Nickname                                         |
-| irc:password       | None                                      | No       | IRC Password                                         |
+| Name                 | Default                                   | Required | Description                                          |
+|:-------------------- |:-----------------------------------------:|:--------:| ----------------------------------------------------:|
+| outlets              | ["irc"]                                   | No       | List of outlets to send messages to                  |
+| github:shorten_url   | False                                     | No       | Shorten all GitHub links with git.io                 |
+| github:verify        | True                                      | No       | Verify the payload with the `X-Hub-Signature` header |
+| irc:host             | None                                      | No       | Hostname for IRC Server                              |
+| irc:port             | 6697 if SSL enabled, 6667 if SSL disabled | No       | Port for IRC Server                                  |
+| irc:ssl              | True                                      | No       | Connect to IRC Server with SSL                       |
+| irc:nick             | None                                      | No       | IRC Nickname                                         |
+| irc:password         | None                                      | No       | IRC Password                                         |
+| mastodon:instance    | None                                      | No       | Hostname for Mastodon Instance                       |
+| mastodon:user        | None                                      | No       | Mastodon User (registered E-mail address)            |
+| mastodon:password    | None                                      | No       | Mastodon Password                                    |
+| mastodon:secretspath | None                                      | No       | Path to Client and User Credential-Files (.secret)   |
+| mastodon:appname     | None                                      | No       | Name of the App for registration at the Instance     |
+| mastodon:merges_only | True                                      | No       | Only toot merges to the Instance                     |
 
 **Pool Configuration Object**
 
-| Name               | Default                                   | Required | Description                                          |
-|:------------------ |:-----------------------------------------:|:--------:| ----------------------------------------------------:|
-| name               | None                                      | Yes      | Name of the Pool                                     |
-| github:repos       | None                                      | Yes      | List of Repository Configuration Objects             |
-| github:shorten_url | False                                     | No       | Shorten all GitHub links with git.io                 |
-| irc:host           | None                                      | Yes      | Hostname for IRC Server                              |
-| irc:port           | 6697 if SSL enabled, 6667 if SSL disabled | No       | Port for IRC Server                                  |
-| irc:ssl            | True                                      | No       | Connect to IRC Server with SSL                       |
-| irc:nick           | None                                      | Yes      | IRC Nickname                                         |
-| irc:password       | None                                      | No       | IRC Password                                         |
-| irc:channels       | None                                      | Yes      | List of channels to send messages to                 |
+| Name                 | Default                                   | Required~ | Description                                          |
+|:-------------------- |:-----------------------------------------:|:---------:| ----------------------------------------------------:|
+| name                 | None                                      | Yes       | Name of the Pool                                     |
+| outlets              | ["irc"]                                   | No        | List of outlets to send messages to                  |
+| github:repos         | None                                      | Yes       | List of Repository Configuration Objects             |
+| github:shorten_url   | False                                     | No        | Shorten all GitHub links with git.io                 |
+| irc:host             | None                                      | Yes       | Hostname for IRC Server                              |
+| irc:port             | 6697 if SSL enabled, 6667 if SSL disabled | No        | Port for IRC Server                                  |
+| irc:ssl              | True                                      | No        | Connect to IRC Server with SSL                       |
+| irc:nick             | None                                      | Yes       | IRC Nickname                                         |
+| irc:password         | None                                      | No        | IRC Password                                         |
+| irc:channels         | None                                      | Yes       | List of channels to send messages to                 |
+| mastodon:instance    | None                                      | Yes       | Hostname for Mastodon Instance                       |
+| mastodon:user        | None                                      | Yes       | Mastodon User (registered E-mail address)            |
+| mastodon:password    | None                                      | Yes       | Mastodon Password                                    |
+| mastodon:secretspath | None                                      | Yes       | Path to Client and User Credential-Files (.secret)   |
+| mastodon:appname     | None                                      | Yes       | Name of the App for registration at the Instance     |
+| mastodon:merges_only | True                                      | No        | Only toot merges to the Instance                     |
+
+~ For irc:* and mastodon:* : if they're one of the configured outlets.
 
 **Repository Configuration Object**
 
@@ -174,11 +207,21 @@ global: # optional
       shorten_url: true # optional, defaults to false
       verify: true # optional, defaults to true
     irc: # optional
-      host: chat.freenode.net # optional
+      host: chat.freenode.net # optional, but must be set in pool if not here and needed (i.e. IRC is one of the outlets)
       port: 6697 # optional, default is 6697 for ssl and 6667 for non-ssl
       ssl: true # optional, default is true
-      nick: my-irc-bot # optional, but must be set in pool if not here
-      password: abc123 # optional, but must be set in pool if not here and needed
+      nick: my-irc-bot # optional, but must be set in pool if not here and needed (i.e. IRC is one of the outlets)
+      password: abc123 # optional, but must be set in pool if not here and needed for the nick that's used
+    mastodon: # optional
+      instance: https://mstdn.social # optional, but must be set in pool if not here and needed (i.e. Mastodon is one of the outlets)
+      user: happy@place.net # optional, but must be set in pool if not here and needed (i.e. Mastodon is one of the outlets)
+      password: myBotPassword123! # optional, but must be set in pool if not here and needed (i.e. Mastodon is one of the outlets)
+      secretspath: /home/thatsme/my/secrets/ # optional, but must be set in pool if not here and needed (i.e. Mastodon is one of the outlets)
+      appname: my-mastodon-bot # optional, but must be set in pool if not here and needed (i.e. Mastodon is one of the outlets)
+      merges_only: true # optional, default is true
+    outlets: # optional, default is irc
+      - irc
+      - mastodon
 
 pools: # required
   - name: my-pool # required
@@ -191,14 +234,24 @@ pools: # required
             - staging
           verify: true # optional, default is true
       shorten_url: true # optional, defaults to false
-    irc: # required
+    irc: # required if IRC is one of the outlets
       host: chat.freenode.net # required
       port: 6697 # optional, default is 6697 for ssl and 6667 for non-ssl
-      ssl: true # optional default is true
+      ssl: true # optional, default is true
       nick: my-irc-bot # required
       password: abc123 # optional, but if it's required by the nick it must be set here or with environment variable
       channels: # required
         - my-cool-channel # at least 1 channel is required
+    mastodon: # required if Mastodon is one of the outlets
+      instance: https://mstdn.social # required
+      user: happy@place.net # required
+      password: myBotPassword123! # required
+      secretspath: /home/thatsme/my/secrets/ # required
+      appname: my-mastodon-bot # required
+      merges_only: # optional, default is true
+    outlets: # optional, default is irc
+      - irc
+      - mastodon
 ```
 
 If you define a parameter in the Global section and in your pool, the value in the pool will be used.
