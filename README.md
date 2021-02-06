@@ -248,7 +248,7 @@ pools: # required
       password: myBotPassword123! # required
       secretspath: /home/thatsme/my/secrets/ # required
       appname: my-mastodon-bot # required
-      merges_only: # optional, default is true
+      merges_only: true # optional, default is true
     outlets: # optional, default is irc
       - irc
       - mastodon
