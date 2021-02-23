@@ -129,6 +129,7 @@ $ python3 ghi/server.py --port 8080
 _Make sure your `PYTHONPATH` is set to your Ghi project directory._
 
 I have [provided an example service file](examples/ghi.service.md) to use with systemd to make starting/stopping Ghi easier.
+To use systemd's journal logging you can add the `--systemd` argument in the command line.
 
 # Configuration
 

@@ -132,7 +132,7 @@ def getConfiguration():
         if "debug" in config:
             debug = config["debug"]
             if type(debug) is not bool:
-                raise TypeError("'pools' is not a boolean")
+                raise TypeError("'debug' is not a boolean")
         else:
             debug = False
 
