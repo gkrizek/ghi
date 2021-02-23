@@ -9,37 +9,40 @@ import threading
 import tornado.ioloop
 import tornado.web
 import uuid
+from ghilogging import setup_server_logging
 from time import sleep
 
 
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s [ghi] %(message)s",
-    datefmt="%Y-%m-%d %H:%M:%S"
-)
-
- 
 def GetArgs():
     # Allow a configurable port
     parser = argparse.ArgumentParser()
     parser.add_argument("--port", dest="port", help="Port to listen on", type=int)
+    parser.add_argument("--systemd", action="store_true", help="Use journal log format")
     args = parser.parse_args()
+
     if args.port:
         port = args.port
     elif "GHI_PORT" in os.environ:
         port = os.getenv("GHI_PORT")
     else:
         port = 7890
+
+    if args.systemd:
+        log_mode = "systemd"
+    else:
+        log_mode = "plain"
+
     return {
-        "port": port
+        "port": port,
+        "log_mode": log_mode
     }
 
 
 def InvokeFunction(payload):
     sys.path.append(os.path.dirname(os.path.realpath(__file__)))
     from index import handler
-    return handler(payload)
-    
+    return handler(event=payload, sysd=GetArgs()['log_mode'])
+
 
 def CreatePayload(method, path, requesterIp, body, headers):
     # Create a payload that the index file will understand
@@ -151,6 +154,8 @@ def main():
         # Handle logging ourselves
         logging.getLogger('tornado.access').disabled = True
         port = GetArgs()['port']
+        log_mode = GetArgs()['log_mode']
+        setup_server_logging(log_mode)
         app = application()
         app.listen(port)
         signal.signal(signal.SIGTERM, ShutDown)

@@ -6,54 +6,27 @@ import logging
 from configuration import getConfiguration
 from github import getPool, parsePayload
 from irc import sendMessages
+from ghilogging import setup_server_logging
 from ghimastodon import sendToots
 from validation import validatePayload
 from __init__ import __version__
 
 
-def handler(event, context=None):
+def handler(event, context=None, sysd=None):
     # ensure it's a valid request
     if event and "body" in event and "headers" in event:
-
-        # AWS Lambda configures the logger before executing this script
-        # We want to remove their configurations and set our own
-        log = logging.getLogger()
-        if log.handlers:
-            for handler in log.handlers:
-                log.removeHandler(handler)
-
-        if "X-Ghi-Server" in event["headers"]:
-            # was invoked by local server
-            logging.basicConfig(
-                level=logging.INFO,
-                format="%(asctime)s [ghi] %(message)s",
-                datefmt="%Y-%m-%d %H:%M:%S"
-            )
-        else:
-            logging.basicConfig(
-                level=logging.INFO,
-                format="%(message)s"
-            )
-
-        # By default ghi will respond to the request immediately,
-        # then invoke itself to actually process the event.
-        # This can be disabled by setting GHI_LONG_RESPONSE="true"
-        if "requestContext" in event:
-            from aws import InvokeSelf
-            # Was invoked by AWS
-            if "GHI_LONG_RESPONSE" in os.environ and os.getenv("GHI_LONG_RESPONSE"):
-                pass
-            elif "X-Ghi-Invoked" not in event["headers"]:
-                return InvokeSelf(event)
-
         # validate and load configuration file
         configuration = getConfiguration()
         if configuration["statusCode"] != 200:
             return configuration
 
-        # Enable debug if set in config
-        if configuration["debug"]:
-            logging.getLogger().setLevel(logging.DEBUG)
+        # configure logging according to server-environment
+        if sysd == "systemd":
+            setup_server_logging("systemd", configuration["debug"])
+        elif "X-Ghi-Server" in event["headers"]:
+            setup_server_logging("plain", configuration["debug"])
+        else:
+            setup_server_logging("aws", configuration["debug"])
 
         # verify the request is from GitHub
         githubPayload = event["body"]
@@ -65,6 +38,17 @@ def handler(event, context=None):
         logging.debug(githubPayload)
         logging.debug("Headers:")
         logging.debug(event["headers"])
+
+        # By default ghi will respond to the request immediately,
+        # then invoke itself to actually process the event.
+        # This can be disabled by setting GHI_LONG_RESPONSE="true"
+        if "requestContext" in event:
+            from aws import InvokeSelf
+            # Was invoked by AWS
+            if "GHI_LONG_RESPONSE" in os.environ and os.getenv("GHI_LONG_RESPONSE"):
+                pass
+            elif "X-Ghi-Invoked" not in event["headers"]:
+                return InvokeSelf(event)
 
         # figure out which pool this should belong to so we can use its secret
         pool = getPool(githubPayload, configuration["pools"])
