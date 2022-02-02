@@ -1,3 +1,4 @@
-PyYAML
-requests
-tornado
+PyYAML~=5.4
+requests~=2.26
+tornado~=6.1
+mastodon-py~=1.5
