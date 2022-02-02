@@ -77,7 +77,7 @@ class IRC(object):
         self.irc.send(bytes("CAP REQ :sasl\r\n", "UTF-8"))
         self.waitAndSee(r'(.*)CAP(.*)ACK(.*)')
         self.irc.send(bytes("AUTHENTICATE PLAIN\r\n", "UTF-8"))
-        self.waitAndSee(r'(.*)AUTHENTICATE \+(.*)')
+        self.waitAndSee(r'(.*)AUTHENTICATE(.*)')
         auth = (
             "{nick}\0{nick}\0{password}"
         ).format(
