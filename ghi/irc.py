@@ -171,7 +171,7 @@ def sendMessages(pool, messages):
             text = irc.getText()
             for line in text.split('\r'):
                 logging.debug(line.rstrip())
-            if re.search(r'(.*)End of /NAMES list(.*)', text, re.MULTILINE):
+            if re.search(r'(.*)End of(.*)', text, re.MULTILINE):
                 break
             elif sendTries > 120:
                 # If tried 120 times and no match, raise error
