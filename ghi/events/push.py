@@ -95,16 +95,23 @@ def Push(payload, poolRepos, shorten):
         else:
             plural = ""
 
-        ircMessages.append(
-            "[{light_purple}{repo}{reset}] {gray}{user}{reset} {action} {bold}{length}{reset} "
-            "commit{plural} to {dark_purple}{branch}{reset}: {blue}{underline}{compareUrl}{reset}\r\n".format(
+        ircCommitInfo = ""
+        if action != "deleted":
+            ircCommitInfo = "{bold}{length}{reset} commit{plural} to ".format(
+                bold   = colors.bold,
+                reset  = colors.reset,
+                length = length,
+                plural = plural
+            )
+
+        ircMessages.append("[{light_purple}{repo}{reset}] {gray}{user}{reset} {action} {commitInfo}"
+                           "{dark_purple}{branch}{reset}: {blue}{underline}{compareUrl}{reset}\r\n".format(
                 repo         = repo,
                 user         = user,
                 action       = action,
-                length       = length,
                 branch       = branch,
                 compareUrl   = url,
-                plural       = plural,
+                commitInfo   = ircCommitInfo,
                 blue         = colors.dark_blue,
                 gray         = colors.light_gray,
                 light_purple = colors.light_purple,
@@ -116,13 +123,21 @@ def Push(payload, poolRepos, shorten):
             )
         )
 
+        mastCommitInfo = ""
+        if action != "deleted":
+            mastCommitInfo = "{length} commit{plural} to ".format(
+                bold   = colors.bold,
+                reset  = colors.reset,
+                length = length,
+                plural = plural
+            )
+
         mastMessages.append(
-            "[{repo}] {user} {action} {length} commit{plural} to {branch}: {compareUrl}".format(
+            "[{repo}] {user} {action} {commitInfo}{branch}: {compareUrl}".format(
                 repo       = repo,
                 user       = user,
                 action     = action,
-                length     = length,
-                plural     = plural,
+                commitInfo = mastCommitInfo,
                 branch     = branch,
                 compareUrl = url
             )
