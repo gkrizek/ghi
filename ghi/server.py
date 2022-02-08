@@ -80,15 +80,21 @@ class TaskQueue(queue.Queue):
 
     def worker(self):
         while True:
-            item, args, kwargs = self.get()
-            logging.info("Start UUID: %s" % args[0]['uuid'])
-            logging.info("{} {} ({})".format(args[0]['httpMethod'], args[0]['path'], args[0]['requesterIp']))
-            response = item(*args, **kwargs)
-            logging.info("")
-            logging.info("Response:")
-            logging.info(response)
-            logging.info("Stop UUID: %s" % args[0]['uuid'])
-            logging.info("")
+            try:
+                item, args, kwargs = self.get()
+                logging.info("Start UUID: %s" % args[0]['uuid'])
+                logging.info("{} {} ({})".format(args[0]['httpMethod'], args[0]['path'], args[0]['requesterIp']))
+                response = item(*args, **kwargs)
+                logging.info("")
+                logging.info("Response:")
+                logging.info(response)
+                logging.info("Stop UUID: %s" % args[0]['uuid'])
+                logging.info("")
+            except Exception as e:
+                errorMessage = "Unexpected problem processing request"
+                logging.error(errorMessage)
+                logging.info(e)
+
             self.task_done()
             sleep(0.5)
 
