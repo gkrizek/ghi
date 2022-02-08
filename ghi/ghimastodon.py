@@ -71,6 +71,10 @@ def login(pool):
 def sendToots(pool, messages):
     try:
         mastodon = login(pool)
+
+        for message in messages:
+            mastodon.toot(message)
+
     except MastodonIllegalArgumentError as e:
         errorMessage = "Mastodon - Probably the password for Mastodon in the configfile is not correct"
         logging.error(errorMessage)
@@ -83,9 +87,6 @@ def sendToots(pool, messages):
             })
         }
 
-    try:
-        for message in messages:
-            mastodon.toot(message)
     except Exception as e:
         errorMessage = "Mastodon - There was a problem sending messages to Mastodon" 
         logging.error(errorMessage)
