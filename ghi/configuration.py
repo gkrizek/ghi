@@ -3,13 +3,15 @@ import logging
 import os
 import yaml
 
-SUPPORTED_OUTLETS = ["irc", "mastodon"]
+SUPPORTED_OUTLETS = ["irc", "mastodon", "matrix"]
+MATRIX_DEVICE_ID = "Ghi-Matrix-Bot"
 
 class Pool(object):
 
 
     def __init__(self, name, outlets, repos, shorten, ircHost, ircPort, ircSsl, ircNick, ircPassword, ircChannels,\
-                 mastInstance, mastUser, mastPassword, mastSecPath, mastAppName, mastMergeFilter):
+                 mastInstance, mastUser, mastPassword, mastSecPath, mastAppName, mastMergeFilter,\
+                 matrixUser, matrixPassword, matrixServer, matrixRooms, matrixSecPath, matrixDevId):
         self.name = name
         self.outlets = outlets
         self.repos = repos
@@ -26,10 +28,16 @@ class Pool(object):
         self.mastSecPath = mastSecPath
         self.mastAppName = mastAppName
         self.mastMergeFilter = mastMergeFilter
+        self.matrixUser = matrixUser
+        self.matrixPassword = matrixPassword
+        self.matrixServer = matrixServer
+        self.matrixRooms = matrixRooms
+        self.matrixSecPath = matrixSecPath
+        self.matrixDevId = matrixDevId
 
 
     def containsRepo(self, repo):
-        for configRepo in self.repos:                
+        for configRepo in self.repos:
             if repo == configRepo["name"]:
                 return True
         return False
@@ -44,7 +52,8 @@ class GlobalConfig(object):
 
 
     def __init__(self, ircHost, ircPort, ircSsl, ircNick, ircPassword, mastInstance, mastUser,\
-                 mastPassword, mastSecPath, mastAppName, mastMergeFilter, shorten, verify, outlets):
+                 mastPassword, mastSecPath, mastAppName, mastMergeFilter, shorten, verify, outlets,\
+                 matrixUser, matrixPassword, matrixServer, matrixSecPath, matrixDevId):
         self.ircHost = ircHost
         self.ircPort = ircPort
         self.ircSsl = ircSsl
@@ -59,6 +68,11 @@ class GlobalConfig(object):
         self.shorten = shorten
         self.verify = verify
         self.outlets = outlets
+        self.matrixUser = matrixUser
+        self.matrixPassword = matrixPassword
+        self.matrixServer = matrixServer
+        self.matrixSecPath = matrixSecPath
+        self.matrixDevId = matrixDevId
 
 
 def getConfiguration():
@@ -242,6 +256,48 @@ def getConfiguration():
             globalMastAppName = None
             globalMastMergeFilter = None
 
+        if "matrix" in globalConfig:
+            if "user" in globalConfig["matrix"]:
+                globalMatrixUser = globalConfig["matrix"]["user"]
+                if type(globalMatrixUser) is not str:
+                    raise TypeError("'user' is not a string")
+            else:
+                globalMatrixUser = None
+
+            if "password" in globalConfig["matrix"]:
+                globalMatrixPassword = globalConfig["matrix"]["password"]
+                if type(globalMatrixPassword) is not str:
+                    raise TypeError("'password' is not a string")
+            else:
+                globalMatrixPassword = None
+
+            if "homeserver" in globalConfig["matrix"]:
+                globalMatrixServer = globalConfig["matrix"]["homeserver"]
+                if type(globalMatrixServer) is not str:
+                    raise TypeError("'homeserver' is not a string")
+            else:
+                globalMatrixServer = None
+
+            if "secretspath" in globalConfig["matrix"]:
+                globalMatrixSecPath = globalConfig["matrix"]["secretspath"]
+                if type(globalMatrixSecPath) is not str:
+                    raise TypeError("'secretspath' is not a string")
+            else:
+                globalMatrixSecPath = None
+
+            if "device_id" in globalConfig["matrix"]:
+                globalMatrixDevId = globalConfig["matrix"]["device_id"]
+                if type(globalMatrixDevId) is not str:
+                    raise TypeError("'device_id' is not a string")
+            else:
+                globalMatrixDevId = MATRIX_DEVICE_ID
+        else:
+            globalMatrixUser = None
+            globalMatrixPassword = None
+            globalMatrixServer = None
+            globalMatrixSecPath = None
+            globalMatrixDevId = None
+
         if "github" in globalConfig:
             if "shorten_url" in globalConfig["github"]:
                 globalShorten = globalConfig["github"]["shorten_url"]
@@ -292,6 +348,11 @@ def getConfiguration():
             mastSecPath     = globalMastSecPath,
             mastAppName     = globalMastAppName,
             mastMergeFilter = globalMastMergeFilter,
+            matrixUser      = globalMatrixUser,
+            matrixPassword  = globalMatrixPassword,
+            matrixServer    = globalMatrixServer,
+            matrixSecPath   = globalMatrixSecPath,
+            matrixDevId     = globalMatrixDevId,
             shorten         = globalShorten,
             verify          = globalVerify,
             outlets         = globalGeneratedOutlets
@@ -575,6 +636,91 @@ def getConfiguration():
                 else:
                     mastMergeFilter = True
 
+            if "matrix" in generatedOutlets and "matrix" in pool:
+                if "user" in pool["matrix"]:
+                    matrixUser = pool["matrix"]["user"]
+                elif globalSettings.matrixUser:
+                    matrixUser = globalSettings.matrixUser
+                else:
+                    raise KeyError("user")
+                if type(matrixUser) is not str:
+                    raise TypeError("'user' is not a string")
+
+                if "password" in pool["matrix"]:
+                    matrixPassword = pool["matrix"]["password"]
+                elif globalSettings.matrixPassword:
+                    matrixPassword = globalSettings.matrixPassword
+                else:
+                    raise KeyError("password")
+                if type(matrixPassword) is not str:
+                    raise TypeError("'password' is not a string")
+
+                if "homeserver" in pool["matrix"]:
+                    matrixServer = pool["matrix"]["homeserver"]
+                elif globalSettings.matrixServer:
+                    matrixServer = globalSettings.matrixServer
+                else:
+                    raise KeyError("homeserver")
+                if type(matrixServer) is not str:
+                    raise TypeError("'homeserver' is not a string")
+
+                if "secretspath" in pool["matrix"]:
+                    matrixSecPath = pool["matrix"]["secretspath"]
+                elif globalSettings.matrixSecPath:
+                    matrixSecPath = globalSettings.matrixSecPath
+                else:
+                    raise KeyError("secretspath")
+                if type(matrixSecPath) is not str:
+                    raise TypeError("'secretspath' is not a string")
+
+                if "device_id" in pool["matrix"]:
+                    matrixDevId = pool["matrix"]["device_id"]
+                elif globalSettings.matrixDevId:
+                    matrixDevId = globalSettings.matrixDevId
+                else:
+                    matrixDevId = MATRIX_DEVICE_ID
+                if type(matrixDevId) is not str:
+                    raise TypeError("'device_id' is not a string")
+
+                if "rooms" in pool["matrix"]:
+                    matrixRooms = pool["matrix"]["rooms"]
+                else:
+                    raise KeyError("rooms")
+                if type(matrixRooms) is not list:
+                    raise TypeError("'rooms' is not a list")
+                if len(matrixRooms) < 1:
+                    raise TypeError("'rooms' must contain at least 1 item")
+
+                generatedMatrixRooms = list()
+                for room in matrixRooms:
+                    generatedMatrixRooms.append(room)#"+room)
+
+            elif "matrix" in generatedOutlets and "matrix" in globalConfig:
+                if globalSettings.matrixUser:
+                    matrixUser = globalSettings.matrixUser
+                else:
+                    raise KeyError("user")
+
+                if globalSettings.matrixPassword:
+                    matrixPassword = globalSettings.matrixPassword
+                else:
+                    raise KeyError("password")
+
+                if globalSettings.matrixServer:
+                    matrixServer = globalSettings.matrixServer
+                else:
+                    raise KeyError("homeserver")
+
+                if globalSettings.matrixSecPath:
+                    matrixSecPath = globalSettings.matrixSecPath
+                else:
+                    raise KeyError("secretspath")
+
+                if globalSettings.matrixDevId:
+                    matrixDevId = globalSettings.matrixDevId
+                else:
+                    matrixDevId = MATRIX_DEVICE_ID
+
         except (KeyError, TypeError) as e:
             errorMessage = "Missing or invalid parameter in configuration file: %s" % e
             logging.error(errorMessage)
@@ -602,6 +748,14 @@ def getConfiguration():
             mastAppName = None
             mastMergeFilter = None
 
+        if "matrix" not in generatedOutlets:
+            matrixUser = None
+            matrixPassword = None
+            matrixServer = None
+            generatedMatrixRooms = None
+            matrixSecPath = None
+            matrixDevId = None
+
         pools.append(
             Pool(
                 name=name,
@@ -619,7 +773,13 @@ def getConfiguration():
                 mastPassword=mastPassword,
                 mastSecPath=mastSecPath,
                 mastAppName=mastAppName,
-                mastMergeFilter=mastMergeFilter
+                mastMergeFilter=mastMergeFilter,
+                matrixUser=matrixUser,
+                matrixPassword=matrixPassword,
+                matrixServer=matrixServer,
+                matrixRooms=generatedMatrixRooms,
+                matrixSecPath=matrixSecPath,
+                matrixDevId=matrixDevId
             )
         )
 

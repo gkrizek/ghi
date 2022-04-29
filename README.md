@@ -2,12 +2,12 @@
 
 **G**it**H**ub **I**RC Notification Service
 
-Ghi (pronounced 'ghee') is a relay between GitHub and IRC and/or Mastodon. It was created to take the place of the [now depreciated](https://developer.github.com/changes/2018-04-25-github-services-deprecation/) [GitHub IRC Service](https://github.com/github/github-services/blob/master/lib/services/irc.rb). Ghi receives events from GitHub for a specified repository via a webhook. Then it parses the event and sends the relevant information to your configured IRC channels and/or Mastodon timeline. Ghi was written to be very configuration driven. Therefore, Ghi is set up with a `.ghi.yml` file and can listen for multiple repositories and send to multiple IRC channels. Most of the features in the original GitHub Service are supported in Ghi as well.
+Ghi (pronounced 'ghee') is a relay between GitHub and IRC and/or Mastodon. It was created to take the place of the [now depreciated](https://developer.github.com/changes/2018-04-25-github-services-deprecation/) [GitHub IRC Service](https://github.com/github/github-services/blob/master/lib/services/irc.rb). Ghi receives events from GitHub for a specified repository via a webhook. Then it parses the event and sends the relevant information to your configured IRC channels and/or Mastodon timeline and/or Matrix rooms. Ghi was written to be very configuration driven. Therefore, Ghi is set up with a `.ghi.yml` file and can listen for multiple repositories and send to multiple IRC channels. Most of the features in the original GitHub Service are supported in Ghi as well.
 
 
 # Getting Started
 
-Ghi was designed and written to be ran in [AWS Lambda](https://aws.amazon.com/lambda/) with [API Gateway](https://aws.amazon.com/api-gateway/). However, I've also created a very simple HTTP server implementation so Ghi can be ran on any server if desired. Ghi is configured entirely with the `.ghi.yml` file. In this file you will set all necessary information including repositories, IRC nick, IRC host, channels, Mastodon instance, Mastodon user, etc.
+Ghi was designed and written to be ran in [AWS Lambda](https://aws.amazon.com/lambda/) with [API Gateway](https://aws.amazon.com/api-gateway/). However, I've also created a very simple HTTP server implementation so Ghi can be ran on any server if desired. Ghi is configured entirely with the `.ghi.yml` file. In this file you will set all necessary information including repositories, IRC nick, IRC host, channels, Mastodon instance, Mastodon user, Matrix homeserver, Matrix rooms, etc.
 
 ## Deployment
 
@@ -38,6 +38,14 @@ Ghi supports pushing messages to Mastodon. Since Ghi, as the name implies, is ma
 $ pip3 install mastodon-py
 ```
 
+### Matrix
+
+Ghi also supports pushing messages to Matrix. Again, since Ghi, as the name implies, is mainly focused on IRC the module requirement for Mastodon is optional. If you want to use Matrix as one of the outlets the matrix-nio module is required:
+
+```
+$ pip3 install matrix-nio
+```
+
 ## Setting Configuration
 
 ### .ghi.yml
@@ -56,7 +64,7 @@ To explain, if I have a `~/.ghi.yml` file and a `./.ghi.yml` file in my current 
 
 #### Contents
 
-The Ghi file is where you specify things like repositories, branches, channels, IRC details, etc. Ghi uses something called a "Pool" to determine which events do what. A Pool can have 1 or more repositories and 1 or more channels. You can also list multiple pools in a single Ghi instance. So you could have both `gkrizek/repo1` and `gkrizek/repo2` sending messages to `#my-cool-channel` while also having `gkrizek/repo3` sending messages to `#other-cool-channel` and `#last-cool-channel` (and of course many more variations of that).
+The Ghi file is where you specify things like repositories, branches, channels, and IRC/Mastodon/Matrix details. Ghi uses something called a "Pool" to determine which events do what. A Pool can have 1 or more repositories and 1 or more channels. You can also list multiple pools in a single Ghi instance. So you could have both `gkrizek/repo1` and `gkrizek/repo2` sending messages to `#my-cool-channel` while also having `gkrizek/repo3` sending messages to `#other-cool-channel` and `#last-cool-channel` (and of course many more variations of that).
 
 The top two required parameters of the Ghi file are `version` and `pools`. Currently there is only a version `1` of the Ghi file, but `pools` will be a list of Pool configurations. Each Pool is required to define some GitHub information like repository names and validation secrets. They will also need to specify IRC data like nick, host, password, and channels.
 
@@ -67,25 +75,34 @@ There are a lot more options that you can set to further configure Ghi. [See the
 ```yaml
 version: 1
 pools:
-  - name: my-pool
+  - name: "my-pool"
     github:
       repos:
-        - name: gkrizek/repo1
-          secret: 3ccb8d36bd4c67dd1dffcff9ca2c40
+        - name: "gkrizek/repo1"
+          secret: "3ccb8d36bd4c67dd1dffcff9ca2c40"
     irc:
-      host: chat.freenode.net
-      nick: my-irc-bot
+      host: "chat.freenode.net"
+      nick: "my-irc-bot"
       channels:
-        - my-cool-channel
+        - "my-cool-channel"
     mastodon:
-      instance: https://mstdn.social
-      user: happy@place.net
-      password: myBotPassword123!
-      secretspath: /home/thatsme/my/secrets/
-      appname: my-mastodon-bot
+      instance: "https://mstdn.social"
+      user: "happy@place.net"
+      password: "myBotPassword123!"
+      secretspath: "/home/thatsme/my/mastodonsecrets/"
+      appname: "my-mastodon-bot"
+    matrix:
+      homeserver: "https://a.matrix.srv"
+      user: "@ghibot:matrix.srv"
+      password: "anotherGreatPassword456!"
+      secretspath: "/home/thatsme/my/matrixsecrets/"
+      device_id: "Ghi-Matrix-Bot"
+      rooms:
+        - "#room:matrix.srv"
     outlets:
-      - irc
-      - mastodon      
+      - "irc"
+      - "mastodon"
+      - "matrix"
 ```
 
 _More Ghi file examples in [`examples/.ghi.yml.md`](examples/.ghi.yml.md)._
@@ -164,6 +181,11 @@ Ghi is configurable and supports lots of combinations of repositories, channels,
 | mastodon:secretspath | None                                      | No       | Path to Client and User Credential-Files (.secret)   |
 | mastodon:appname     | None                                      | No       | Name of the App for registration at the Instance     |
 | mastodon:merges_only | True                                      | No       | Only toot merges to the Instance                     |
+| matrix:homeserver    | None                                      | No       | Hostname for Matrix Server                           |
+| matrix:user          | None                                      | No       | Matrix User                                          |
+| matrix:password      | None                                      | No       | Matrix Password                                      |
+| matrix:secretspath   | None                                      | No       | Path to Matrix` User Credential-Files (.json)        |
+| matrix:device_id     | "Ghi-Matrix-Bot"                          | No       | Name of the device(/app) being shown at the userinfo |
 
 **Pool Configuration Object**
 
@@ -185,8 +207,14 @@ Ghi is configurable and supports lots of combinations of repositories, channels,
 | mastodon:secretspath | None                                      | Yes       | Path to Client and User Credential-Files (.secret)   |
 | mastodon:appname     | None                                      | Yes       | Name of the App for registration at the Instance     |
 | mastodon:merges_only | True                                      | No        | Only toot merges to the Instance                     |
+| matrix:homeserver    | None                                      | Yes       | Hostname for Matrix Server                           |
+| matrix:user          | None                                      | Yes       | Matrix User                                          |
+| matrix:password      | None                                      | Yes       | Matrix Password                                      |
+| matrix:secretspath   | None                                      | Yes       | Path to Matrix' User Credential-Files (.json)        |
+| matrix:device_id     | "Ghi-Matrix-Bot"                          | Yes       | Name of the device(/app) being shown at the userinfo |
+| matrix:rooms         | None                                      | Yes       | List of rooms IDs or room aliases                    |
 
-~ For irc:* and mastodon:* : if they're one of the configured outlets.
+~ For all irc, mastodon, and matrix settings: if they're one of the configured outlets.
 
 **Repository Configuration Object**
 
@@ -208,51 +236,67 @@ global: # optional
       shorten_url: true # optional, defaults to false
       verify: true # optional, defaults to true
     irc: # optional
-      host: chat.freenode.net # optional, but must be set in pool if not here and needed (i.e. IRC is one of the outlets)
+      host: "chat.freenode.net" # optional, but must be set in pool if not here
       port: 6697 # optional, default is 6697 for ssl and 6667 for non-ssl
       ssl: true # optional, default is true
-      nick: my-irc-bot # optional, but must be set in pool if not here and needed (i.e. IRC is one of the outlets)
-      password: abc123 # optional, but must be set in pool if not here and needed for the nick that's used
+      nick: "my-irc-bot" # optional, but must be set in pool if not here
+      password: "abc123" # optional, but must be set in pool if not here and if needed for the nick that's used
     mastodon: # optional
-      instance: https://mstdn.social # optional, but must be set in pool if not here and needed (i.e. Mastodon is one of the outlets)
-      user: happy@place.net # optional, but must be set in pool if not here and needed (i.e. Mastodon is one of the outlets)
-      password: myBotPassword123! # optional, but must be set in pool if not here and needed (i.e. Mastodon is one of the outlets)
-      secretspath: /home/thatsme/my/secrets/ # optional, but must be set in pool if not here and needed (i.e. Mastodon is one of the outlets)
-      appname: my-mastodon-bot # optional, but must be set in pool if not here and needed (i.e. Mastodon is one of the outlets)
+      instance: "https://mstdn.social" # optional, but must be set in pool if not here
+      user: "happy@place.net" # optional, but must be set in pool if not here
+      password: "myBotPassword123!" # optional, but must be set in pool if not here
+      secretspath: "/home/thatsme/my/mastodonsecrets/" # optional, but must be set in pool if not here
+      appname: "my-mastodon-bot" # optional, but must be set in pool if not here
       merges_only: true # optional, default is true
+    matrix: # optional
+      homeserver: "https://a.matrix.srv" # optional, but must be set in pool if not here
+      user: "@ghibot:matrix.srv" # optional, but must be set in pool if not here
+      password: "anotherGreatPassword456!" # optional, but must be set in pool if not here
+      secretspath: "/home/thatsme/my/matrixsecrets/" # optional, but must be set in pool if not here
+      device_id: "Ghi-Matrix-Bot" # optional, default is "Ghi-Matrix-Bot"
     outlets: # optional, default is irc
-      - irc
-      - mastodon
+      - "irc"
+      - "mastodon"
+      - "matrix"
 
 pools: # required
-  - name: my-pool # required
+  - name: "my-pool" # required
     github: # required
       repos: # required
-        - name: gkrizek/repo1 # at least 1 repo is required
-          secret: 3ccb8d36bd4c67dd1dffcff9ca2c40 # optional, but if it's needed it must be set here or with environment variable
+        - name: "gkrizek/repo1" # at least 1 repo is required
+          secret: "3ccb8d36bd4c67dd1dffcff9ca2c40" # optional, but if it's needed it must be set here or with environment variable
           branches: # optional, default is 'all'
-            - master
-            - staging
+            - "master"
+            - "staging"
           verify: true # optional, default is true
       shorten_url: true # optional, defaults to false
     irc: # required if IRC is one of the outlets
-      host: chat.freenode.net # required
+      host: "chat.freenode.net" # required
       port: 6697 # optional, default is 6697 for ssl and 6667 for non-ssl
       ssl: true # optional, default is true
-      nick: my-irc-bot # required
-      password: abc123 # optional, but if it's required by the nick it must be set here or with environment variable
+      nick: "my-irc-bot" # required
+      password: "abc123" # optional, but if it's required by the nick it must be set here or with environment variable
       channels: # required
-        - my-cool-channel # at least 1 channel is required
+        - "my-cool-channel" # at least 1 channel is required
     mastodon: # required if Mastodon is one of the outlets
       instance: https://mstdn.social # required
       user: happy@place.net # required
       password: myBotPassword123! # required
-      secretspath: /home/thatsme/my/secrets/ # required
-      appname: my-mastodon-bot # required
+      secretspath: "/home/thatsme/my/mastodonsecrets/" # required
+      appname: "my-mastodon-bot" # required
       merges_only: true # optional, default is true
+    matrix: # required if Matrix is one of the outlets
+      homeserver: "https://a.matrix.srv" # required
+      user: "@ghibot:matrix.srv" # required
+      password: "anotherGreatPassword456!" # required
+      secretspath: "/home/thatsme/my/matrixsecrets/" # required
+      device_id: "Ghi-Matrix-Bot" # required, default is "Ghi-Matrix-Bot"
+      rooms: # required
+        - "#room:matrix.srv" # at least 1 room is required
     outlets: # optional, default is irc
-      - irc
-      - mastodon
+      - "irc"
+      - "mastodon"
+      - "matrix"
 ```
 
 If you define a parameter in the Global section and in your pool, the value in the pool will be used.
