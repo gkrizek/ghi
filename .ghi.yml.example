@@ -1,23 +1,32 @@
 version: 1
 pools:
-  - name: pool-name
+  - name: "pool-name"
     github:
       repos:
-        - name: owner/repo
-          secret: abc123
+        - name: "owner/repo"
+          secret: "abc123"
     irc:
-      host: chat.freenode.net
-      nick: my-irc-bot
-      password: myBotPassword123!
+      host: "chat.freenode.net"
+      nick: "my-irc-bot"
+      password: "myBotPassword123!"
       channels:
-        - channel1
+        - "channel1"
     mastodon:
-      instance: https://mstdn.social
-      user: happy@place.net
-      password: myBotPassword123!
-      secretspath: /home/thatsme/my/secrets/
-      appname: my-mastodon-bot
+      instance: "https://mstdn.social"
+      user: "happy@place.net"
+      password: "myBotPassword123!"
+      secretspath: "/home/thatsme/my/mastodonsecrets/"
+      appname: "my-mastodon-bot"
       merges_only: True
+    matrix:
+      homeserver: "https://a.matrix.srv"
+      user: "@ghibot:matrix.srv"
+      password: "anotherGreatPassword456!"
+      secretspath: "/home/thatsme/my/matrixsecrets/"
+      device_id: "Ghi-Matrix-Bot"
+      rooms:
+        - "#room:matrix.srv"
     outlets:
-      - irc
-      - mastodon
+      - "irc"
+      - "mastodon"
+      - "matrix"

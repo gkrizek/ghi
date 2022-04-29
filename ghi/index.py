@@ -3,13 +3,29 @@ import sys
 sys.path.append(os.path.dirname(os.path.realpath(__file__)))
 import json
 import logging
+
 from configuration import getConfiguration
 from github import getPool, parsePayload
-from irc import sendMessages
 from ghilogging import setup_server_logging
+from irc import sendMessages as sendIrcMessages
 from ghimastodon import sendToots
+from ghimatrix import sendMessages as sendMatrixMessages
 from validation import validatePayload
 from __init__ import __version__
+
+
+def composeResultMessage(outlets):
+    result = "Successfully notified "
+
+    if len(outlets) == 1:
+        result += outlets[0]
+    elif len(outlets) == 2:
+        result += "both " + outlets[0] + " and " + outlets[1]
+    else:
+        ", and ".join(outlets)
+    result += "."
+
+    return result
 
 
 def handler(event, context=None, sysd=None):
@@ -96,24 +112,22 @@ def handler(event, context=None, sysd=None):
         if getMessages["statusCode"] != 200:
             return getMessages
 
-        ircCheck = False
-        mastCheck = False
+        outletChecks = list()
         failure = False
-        
+
         if "irc" in pool["pool"].outlets:
             logging.debug("IRC Messages:")
             logging.debug(getMessages["ircMessages"])
 
             # Send messages to the designated IRC channel(s)
-            sendToIrc = sendMessages(pool["pool"], getMessages["ircMessages"])
+            sendToIrc = sendIrcMessages(pool["pool"], getMessages["ircMessages"])
             if sendToIrc["statusCode"] != 200:
                 failure = True
                 ircResult = "Something went wrong while trying to notify IRC."
             else:
                 ircResult = "Successfully notified IRC."
-                ircCheck = True
+                outletChecks.append("IRC")
             logging.info(ircResult)
-            
 
         githubPayload = json.loads(githubPayload)
 
@@ -135,22 +149,31 @@ def handler(event, context=None, sysd=None):
                 failure = True
                 mastResult = "Something went wrong while trying to notify Mastodon."
             else:
-                mastResult = "Succesfully notified Mastodon."
-                mastCheck = True
+                mastResult = "Successfully notified Mastodon."
+                outletChecks.append("Mastodon")
             logging.info(mastResult)
-            
-        if ircCheck or not mastAppliedMergeFilter and not failure:
-            result = "Succesfully notified {both0}{IRC}{both1}{Mastodon}.".format(
-                both0    = "both " if ircCheck and mastCheck else "",
-                both1    = " and " if ircCheck and mastCheck else "",
-                IRC      = "IRC" if ircCheck else "",
-                Mastodon = "Mastodon" if mastCheck else ""
-            )
+
+        if "matrix" in pool["pool"].outlets:
+            logging.debug("Matrix Messages:")
+            logging.debug(getMessages["matrixMessages"])
+
+            # Send messages to the designated Matrix' room(s)
+            sendToMatrix = sendMatrixMessages(pool["pool"], getMessages["matrixMessages"])
+            if sendToMatrix["statusCode"] != 200:
+                failure = True
+                matrixResult = "Something went wrong while trying to notify Matrix."
+            else:
+                matrixResult = "Successfully notified Matrix."
+                outletChecks.append("Matrix")
+            logging.info(matrixResult)
+
+        if "IRC" in outletChecks or not mastAppliedMergeFilter or "Matrix" in outletChecks and not failure:
+            result = composeResultMessage(outletChecks)
             if "mastodon" in pool["pool"].outlets and mastAppliedMergeFilter:
                 mastResult = "Didn't toot because of the merge filter."
                 logging.info(mastResult)
-                result = result[:-1] + ", but not Mastodon because of the merge filter."    
-        elif "mastodon" in pool["pool"].outlets and mastAppliedMergeFilter:
+                result = result[:-1] + ", but not Mastodon because of the merge filter."
+        elif "mastodon" in pool["pool"].outlets and mastAppliedMergeFilter and not failure:
             mastResult = "Event received, but didn't toot because of the merge filter."
             logging.info(mastResult)
             result = "Event received, but didn't toot because of the merge filter."
@@ -164,7 +187,7 @@ def handler(event, context=None, sysd=None):
                     "message": result
                 })
             }
-        else:        
+        else:
             return {
                 "statusCode": 200,
                 "body": json.dumps({

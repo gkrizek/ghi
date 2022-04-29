@@ -5,6 +5,7 @@ import sys
 sys.path.append(os.path.dirname(os.path.realpath(__file__)) + "/../")
 import github
 from irc import Colors
+from util import matrix_html
 
 
 def PullRequest(payload, shorten):
@@ -53,10 +54,25 @@ def PullRequest(payload, shorten):
             url    = url
         )
 
+        matrixMessage = (
+            '[<font color="fuchsia">{repo}</font>] <font color="gray">{user}</font> <b>{action}</b> pull request <b>#{number}</b>: {title} '
+            '(<font color="purple">{baseBranch}</font>...<font color="purple">{headBranch}</font>) <font color="navy"><u>{url}</u></font>'
+        ).format(
+            repo         = matrix_html(payload["pull_request"]["base"]["repo"]["name"]),
+            user         = matrix_html(payload["sender"]["login"]),
+            action       = matrix_html(action),
+            number       = payload["number"],
+            title        = matrix_html(payload["pull_request"]["title"]),
+            baseBranch   = matrix_html(payload["pull_request"]["base"]["ref"]),
+            headBranch   = matrix_html(payload["pull_request"]["head"]["ref"]),
+            url          = url
+        )
+
         return {
             "statusCode": 200,
             "ircMessages": [ircMessage],
-            "mastMessages": [mastMessage]
+            "mastMessages": [mastMessage],
+            "matrixMessages": [matrixMessage]
         }
 
     else:
